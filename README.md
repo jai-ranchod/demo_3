@@ -1,1 +1,2 @@
 # demo_3
+This github repository is designed to give demonstrations of my work in a variety of data science and data analysis contexts.  The file names describe the kind of modeling or analysis that each file contains.  Data sets will either be separate files in this repository or will be linked to directly in the .R file.  Each file has embedded commentary explaining each step along the way.  If you have any questions or comments, please do not hesitate to ask.
