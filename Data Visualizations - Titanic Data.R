@@ -18,7 +18,7 @@ titanic <- titanic_train %>%
 titanic <- titanic %>% mutate(Survived_YN = as.numeric(Survived) - 1)
 View(titanic)
 
-#Survived - 0=Did not survive, 1 = survived
+#Survived - 0 = Did not survive, 1 = survived
 #Pclass - Passenger class; 1st class being the most expensive, 2nd class, is cheaper, 3rd class is cheapest
 #Sex - Sex of passenger, female or male
 #Age - Age of passenger; notice occasional missing data here
