@@ -1,5 +1,6 @@
 #####Initial Processing and Definitions#####
-#Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the titanic wreck
+#Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the infamous titanic wreck
+#of 1912
 library(titanic)
 library(splines)
 library(broom)
@@ -13,6 +14,7 @@ titanic <- titanic_train %>%
          Pclass = factor(Pclass),
          Sex = factor(Sex))
 
+#We'll remove NA rows as there aren't very many
 titanic <- na.omit(titanic)
 #making the sex column binary with male = 1
 titanic$sex_binary <- as.integer(titanic$Sex == "male")
@@ -27,7 +29,6 @@ titanic$sex_binary <- as.integer(titanic$Sex == "male")
 #Fare - Passage fare in 1912 British Pounds
 #sex_binary - a different expression of Sex
 
-#First we need to perform some basic data preparation by removing NA's.
 
 #####Linearity-Logit Assumption Check#####
 #Breaking down data into train and test split
@@ -86,9 +87,9 @@ ggplot(model.data, aes(index, .std.resid)) +
 
 
 #Optimizing the number of degrees of freedom via cross-validation; we suspect there would be up to
-# 3 regions (df = 2) for age based on graphics from exploratory phase; we want to allow for the possibility that each area of the domain might need it's own piece
+# 3 regions (df = 2) for age based on graphics from the exploratory phase; we want to allow for the possibility that each area of the domain might need it's own piece
 #of the piece-wise polynomial
-#We'll add one in the interest of exploring additional possibilities
+#We'll add one more in the interest of exploring additional possibilities
 
 #Histogram to provide some additional intuition about how many degrees of freedom may be appropriate
 titanic %>% ggplot(aes(x = Age))+
