@@ -13,16 +13,22 @@ library("car")
 library("pedometrics")
 library("caret")
 library("gtools")
-library("readxl")
 library("stringr")
 library("pdftools")
 library("dplyr")
 library("tidyverse")
 library("scales")
-#Here we are using a dataset from the Cleveland Clinic regarding cancer rates from 2009 to 2011. Specifically we will analyize the odds
-#ratios of incidences of Thyroid cancer for men and women across multiple age groups.
 
-Cancer_Stats <- read_excel("~/MBA Classes/Spring Semester 2020/Business Analytics/Data Sets/Cancer_Stats.xlsx")
+if (!require("readxl")) install.packages("readxl")
+library("readxl")
+
+#Here we are using a data set from the Cleveland Clinic regarding cancer rates from 1999 to 2011.
+#Specifically we will analyze the odds ratios of incidences of Thyroid cancer for men and women 
+#across multiple age groups.
+
+The Data can be loaded 
+
+Cancer_Stats <- read_excel("/Users/jairanchod/Documents/RProjects/demo_3/Cancer_Stats.xlsx")
 head(Cancer_Stats)
 
 #"NewCount" = New Count of either incidences or mortalities
