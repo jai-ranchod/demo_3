@@ -1,34 +1,39 @@
-library(readxl)
-library("class") #needed for knn
-library("tidyverse")
-library("plotly")
-library("forecast")
-library("reldist")
-library("corrplot")
-library("ineq")
-library("gglorenz")
-library("lubridate")
-library("BSDA")
-library("car")
-library("pedometrics")
-library("caret")
-library("gtools")
-library("stringr")
-library("pdftools")
-library("dplyr")
-library("tidyverse")
-library("scales")
-
+#####Loading Libraries and Introducing Data#####
 if (!require("readxl")) install.packages("readxl")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggrepel")) install.packages("ggrepel")
+if (!require("ggplot2")) install.packages("ggplot2")
+library("ggplot2")
+library("ggrepel")
 library("readxl")
-
+library("dplyr")
 #Here we are using a data set from the Cleveland Clinic regarding cancer rates from 1999 to 2011.
 #Specifically we will analyze the odds ratios of incidences of Thyroid cancer for men and women 
-#across multiple age groups.
+#across multiple age groups and all races.
 
-The Data can be loaded 
+#The Data can be loaded by accessing the .csv file I've loaded into github;  the intent is to make this R file 
+#self-contained so the user can simply run the script and observe the output.  However, if there is any trouble
+#reading the data in from github, please feel free to directly download the .xlsx or .csv file from my github
+#repository.
 
-Cancer_Stats <- read_excel("/Users/jairanchod/Documents/RProjects/demo_3/Cancer_Stats.xlsx")
+#Accessing the data via web scraping
+
+url <-"https://github.com/jai-ranchod/demo_3/blob/45c1c5d0fdda7feefd4598e6f5f386d5b2040060/Cancer_Stats.csv"
+h <- read_html(url)
+Nodes <- h %>% html_nodes("table")
+table <- html_table(Nodes[[1]])
+table <- str_split(table[,2], ",", simplify = TRUE)
+colnames(table) <- table[1,]
+table <- table[-1,]
+Cancer_Stats <- as.data.frame(table)
+
+#Making numeric columns
+
+Cancer_Stats$NewCount <- as.numeric(Cancer_Stats$NewCount)
+Cancer_Stats$POPULATION <- as.numeric(Cancer_Stats$POPULATION)
+Cancer_Stats$RATE <- as.numeric(Cancer_Stats$RATE)
+Cancer_Stats$YEAR <- as.numeric(Cancer_Stats$YEAR)
+
 head(Cancer_Stats)
 
 #"NewCount" = New Count of either incidences or mortalities
@@ -40,17 +45,20 @@ head(Cancer_Stats)
 #"Year" = Year of data
 #"AGE_GRP" = Age group 
 
-#For this data set, we will be analyzing incidences of thyroid cancer between males and females for all races. 
-#We consider each year to contain an independent population for each age group.  One could make the case that the population in the 70-74 age group, for example, may be influenced by the occurences in prior years when those patient were in other age groups.  We consider these effects to be small, and combined with the changing population, we are confident in our ability to define each year and age group as independent.
+#We consider each year to contain an independent population for each age group.
+#One could make the case that the population in the 70-74 age group, for example, may be influenced by the occurrences in prior years when those patient were in other age groups.
+#We consider these effects to be small, and combined with the changing population, we are confident in our ability to define each year and age group as independent.  We also want to 
+#be able to compare age groups across gender and to consider an individuals' probability of developing thyroid cancer
+#at various points in his or her life.
 #We start off with a simple density plot showing differences based on sex:
 #####Initial Analysis#####
+#First we need to filter our data.  This analysis will consider incidences of thyroid cancer across all
+#races.  We will create splits along gender lines to analyze the effect of thyroid cancer on men and women.
 
 Thyroid <- Cancer_Stats %>% filter(EVENT_TYPE == "Incidence", RACE == "All Races", SITE == "Thyroid")
 
 Male_Thyroid <- Thyroid %>% filter(SEX == "Male")
 Female_Thyroid <- Thyroid %>% filter(SEX == "Female")
-
-
 
 ggplot()+
   geom_density(aes(x = Male_Thyroid$RATE, fill = "Male"), alpha = 0.6)+
@@ -60,27 +68,35 @@ ggplot()+
   ylab("Probability Density")+
   ggtitle("Probability of Thyroid Cancer Rate (per 10,000) Regardless of Age or Year")
 
-#This shows that in general women face higher rates of thyroid cancer than men.  However, this graph does not provide any age specific information, which we find next.
+#This shows that in general women face higher rates of thyroid cancer than men.
+#However, this graph does not provide any age specific information, which we find next.
+
+#Note that this graph looks best when zoomed in.
 
 Thyroid %>% filter(SEX == "Male and Female") %>% group_by(AGE_GRP) %>% summarise(Population = sum(POPULATION), Count = sum(NewCount), Rate = 100000*(Count/Population)) %>% ggplot(aes(x = AGE_GRP, y = Rate))+
   geom_bar(stat = "identity")+
-  geom_label(aes(label = round(Rate,2)), nudge_y = 1, size = 3)+
+  geom_label_repel(aes(label = round(Rate,2)), nudge_y = 1, size = 2)+
   xlab("Age Group")+
   ylab("Rate of Thyroid Cancer")+
-  ggtitle("Rate of Thyroid Cancer by Age Group")
+  ggtitle("Rate of Thyroid Cancer by Age Group")+
+  theme(axis.text.x = element_text(angle = 90))
+  
 
 #Here we see that rates are highest among the general population between ages 50 and 75.  
-#Breaking the rates down by both gender and age group, however, we see that women see higher rates across all age groups, and that women face the highest incidence rates between ages 40 - 69 as opposed to the 60 - 84 range which is highest for men.
+#Breaking the rates down by both gender and age group, however, we see that women see higher rates across all age groups,
+#and that women face the highest incidence rates between ages 40 - 69 as opposed to the 60 - 84 range which is highest for men.
 
 Thyroid %>% filter(SEX == "Male" | SEX == "Female") %>% group_by(AGE_GRP, SEX) %>% summarise(Population = sum(POPULATION), Count = sum(NewCount), Rate = 100000*(Count/Population)) %>% ggplot(aes(x = AGE_GRP, y = Rate))+
   geom_line(aes(color = SEX, group = SEX))+
   geom_point(aes(color = SEX))+
   xlab("Age Group")+
   ylab("Rate of Thyroid Cancer (per 100,000)")+
-  ggtitle("Rate of Thyroid Cancer by Age Group and Sex")
+  ggtitle("Rate of Thyroid Cancer by Age Group and Sex")+
+  theme(axis.text.x = element_text(angle = 90))
 
 #####Odds of Thyroid Cancer######
-#Next, we can calculate the odds of Thyroid cancer for females and males, and calculated the odds ratios for each age group.  R does have available odds ratio functions, but for these purposes, I prefer to demonstrate manual calculation.
+#Next, we can calculate the odds of Thyroid cancer for females and males, and calculated the odds ratios for each age group.
+#R does have available odds ratio functions, but for these purposes, I prefer to demonstrate manual calculation.
 #First, we need to filter in the relevant data from our initial data set.
 
 Age_Group_Sex <- Thyroid %>% filter(SEX == "Male" | SEX == "Female") %>% group_by(AGE_GRP, SEX) %>% summarise(Population = sum(POPULATION), Count = sum(NewCount), Rate = 100000*(Count/Population))
@@ -174,9 +190,12 @@ New_Age_Group_Sex %>% ggplot(aes(x = AGE_GRP, y = odds_ratio_female_to_male))+
   ylab("Odds Ratio (Female to Male)")+
   ggtitle("Odds Ratios of Thyroid Cancer by Age Group (Female to Male)")+
   geom_label(aes(label = round(odds_ratio_female_to_male,2)), position = position_nudge(y = v, x = w), size = 2.3)+
-  geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2)
+  geom_errorbar(aes(ymin = CI_Lower, ymax = CI_Upper), width = 0.2)+
+  theme(axis.text.x = element_text(angle = 90))
 
 #From this graph we can see that the odds ratios are highest in the younger age groups, with the most precise confidence intervals occuring between ages 55-85.
+#This indicates that at younger age groups women are more prone to thyroid cancer than men, but the disparity evens out as 
+#age increases.
 #####Comparing odds ratios over time#####
 Male_Thyroid_1999 <- Cancer_Stats %>% filter(EVENT_TYPE == "Incidence", RACE == "All Races", SITE == "Thyroid", SEX == "Male", YEAR == 1999)
 Female_Thyroid_1999 <- Cancer_Stats %>% filter(EVENT_TYPE == "Incidence", RACE == "All Races", SITE == "Thyroid", SEX == "Female", YEAR == 1999)
@@ -222,5 +241,5 @@ df %>% ggplot(aes(x = Age_Group))+
   ggtitle("Odds Ratio of Thyroid Cancer (Female to Male) by Year")+
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust=1))
 #Notice that in 1999, the odds ratios are all above 1, indicating the odds of thyroid cancer are higher for women in all age groups, although the odds ratio
-#does appear to approace 1 in the older age groups.  However, in 2011, the odds ratio actually does fall below 1 in all age groups over age 65, indicating
+#does appear to approach 1 in the older age groups.  However, in 2011, the odds ratio actually does fall below 1 in all age groups over age 65, indicating
 #the odds of thyroid cancer are higher for males in these age groups in 2011.
