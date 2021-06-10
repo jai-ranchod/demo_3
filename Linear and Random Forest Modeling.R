@@ -1,4 +1,4 @@
-#####Loading Required Libraries#####
+#####Loading Libraries and Introducing Data#####
 #First we're simply going to load in the necessary libraries for our linear modeling and random forest
 #analysis
 if (!require("pedometrics")) install.packages("pedometrics")
@@ -14,8 +14,6 @@ library(randomForest)
 library(readxl)
 library(corrplot)
 
-
-#####Data Set Introduction and Objective#####
 #First we'll load in the dataset, then we'll introduce it.
 d<-"https://docs.google.com/spreadsheets/d/0BxQfpNgXuWoIWUdZV1ZTc2ZscnM/export?format=csv"
 Lung_Capacity<-read.csv(d)
