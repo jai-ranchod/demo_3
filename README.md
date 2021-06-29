@@ -25,6 +25,9 @@ Statistical Analysis - Cancer Statistics:
 
 In this script, I use data from the Cleveland Clinic that is directly referenced in the script, no alterations are necessary.  The analysis focuses on the odds ratios associated with Thyroid cancer for men vs. women, and contains analysis across both time and gender.
 
+SQLite Demo:
+This script uses the RSQLite package which embeds an SQLite database engine in R.  I add the tables from the "SQL Practice Problems" book by Sylvia Mosilik.  I then use SQLite to execute the queries that are mey answers to some of the "Intermediate" and "Challenge" problems.  The original code was written in MS SQL, and what you see in this repository is my adaptation to SQLite.
+
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
 
 jsranchod@gmail.com
