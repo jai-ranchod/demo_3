@@ -3,10 +3,17 @@ if (!require("readxl")) install.packages("readxl")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("ggrepel")) install.packages("ggrepel")
 if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("rvest")) install.packages("rvest")
+if (!require("reldist")) install.packages("reldist")
+if (!require("stringr")) install.packages("stringr")
+
 library("ggplot2")
 library("ggrepel")
 library("readxl")
 library("dplyr")
+library("rvest")
+library("reldist")
+library("stringr")
 #Here we are using a data set from the Cleveland Clinic regarding cancer rates from 1999 to 2011.
 #Specifically we will analyze the odds ratios of incidences of Thyroid cancer for men and women 
 #across multiple age groups and all races.
@@ -18,7 +25,7 @@ library("dplyr")
 
 #Accessing the data via web scraping
 
-url <-"https://github.com/jai-ranchod/demo_3/blob/45c1c5d0fdda7feefd4598e6f5f386d5b2040060/Cancer_Stats.csv"
+url <-"https://github.com/jai-ranchod/demo_2/blob/dd072b722fc735a87d03a88ee8d63784137f764e/Cancer_Stats.csv"
 h <- read_html(url)
 Nodes <- h %>% html_nodes("table")
 table <- html_table(Nodes[[1]])
