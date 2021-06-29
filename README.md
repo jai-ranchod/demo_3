@@ -1,5 +1,15 @@
 # demo_3
-This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts.  The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository:
+This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R (and SQLite) programming language(s).
+
+You can download R here from the Case Western Reserve University mirror here:
+https://cran.case.edu/
+
+and you can download the RStudio IDE here:
+https://www.rstudio.com/products/rstudio/download/
+
+Both are free.
+
+The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository:
 
 https://github.com/jai-ranchod/demo_2
 
