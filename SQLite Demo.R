@@ -1,3 +1,8 @@
+#This script relies on the RSQLite packages which embeds an SQLite database engine in R.  I use this functionality
+#to set up the database found in "SQL Practice Problems" by Sylvia Vasilik. I then show my responses to select "Intermediate" and
+#"Challenge" problems.  For reference, please find a photo of the database schema in this repository.
+
+
 #####Installing packages and Establishing Connection#####
 
 if (!require("RSQLite")) install.packages("RSQLite")
@@ -8,6 +13,8 @@ library(DBI)
 con <- dbConnect(RSQLite::SQLite(), ":memory:")
 dbListTables(con)
 
+
+#Setting up the database
 
 #####Creating Categories Table#####
 dbExecute(con, "CREATE TABLE Categories(
@@ -3357,6 +3364,8 @@ dbExecute(con, "INSERT INTO Suppliers ([SupplierID], [CompanyName], [ContactName
 
 
 
+#Queries
+
 #####Find the top three countries in terms of average ship costs over the past 12 months#####
   
 
@@ -3566,6 +3575,8 @@ FROM Totals
 print(dbFetch(f))
 dbClearResult(f)
 
+
+#Disconnecting
 
 #####Disconncting#####
 dbDisconnect(con)
