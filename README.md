@@ -1,5 +1,9 @@
 # demo_3
-This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts.  The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository in .xlsx and .csv format as a backup.
+This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts.  The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository:
+
+https://github.com/jai-ranchod/demo_2
+
+as a backup.  All scripts are self-contained, so it is not necessary to download these files, but you are free to do so if you would like.
 
 Data Visualizations - Titanic Data: 
 
