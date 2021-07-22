@@ -20,7 +20,7 @@ library(rapportools)
 #reading the data in from github, please feel free to directly download the .xlsx or .csv file from my github
 #repository.
 
-#Accesing the data via web scraping.
+#Accessing the data via web scraping.
 
 url <-"https://github.com/jai-ranchod/demo_2/blob/dd072b722fc735a87d03a88ee8d63784137f764e/PHLX.csv"
 
