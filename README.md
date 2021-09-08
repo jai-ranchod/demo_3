@@ -1,4 +1,4 @@
-# demo_3
+# Repository Overview
 This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R (and SQLite) programming language(s).
 
 You can download R here from the Case Western Reserve University mirror here:
