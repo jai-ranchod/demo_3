@@ -45,12 +45,14 @@ titanic$sex_binary <- as.integer(titanic$Sex == "male")
 
 #####Linearity-Logit Assumption Check#####
 #Breaking down data into train and test split
-#We will use "titanic_test" as a validation set upon which to evaluate our final model.
-#For the purpose of evaluating assumptions, we'll use a 1/3 - 2/3 split.
+#Note that we are only using the "titanic_train" set here, not utilizing the "titanic_test" set at all.
+#This is because the "titanic_test" set does not have a column indicating survival status, and we want to 
+#apply our final model to a holdout test set to see how it performs.
+#For the purpose of evaluating assumptions, we'll use a 1/5 - 4/5 split.
 
 titanic <- titanic[,c(1,2,4,5,6,7,8)]
-set.seed(2)
-vec <- sample(c(1:nrow(titanic)), (nrow(titanic)/3),replace = FALSE)
+set.seed(1)
+vec <- sample(c(1:nrow(titanic)), (nrow(titanic)/5),replace = FALSE)
 test <- titanic[vec,]
 train <- titanic[-vec,]
 #Now we can actually generate a model
@@ -107,7 +109,7 @@ ggplot(model.data, aes(index, .std.resid)) +
 #We'll add one more in the interest of exploring additional possibilities
 
 #Histogram to provide some additional intuition about how many degrees of freedom may be appropriate
-titanic %>% ggplot(aes(x = Age))+
+train %>% ggplot(aes(x = Age))+
   geom_density()+
   xlab("Age")+
   ylab("Density")+
@@ -120,9 +122,9 @@ titanic %>% ggplot(aes(x = Age))+
 #result that matches a prediction.  Inaccuracies are results that do not match a prediction; we do not distinguish between false positives and false negatives
 #for these purposes.  The degree of freedom that is most frequently the most accurate will then be adopted by the model.
 #setting seed and shuffling data
-set.seed(1)
-rows <- sample(nrow(titanic))
-shuffled <- titanic[rows,]
+set.seed(2)
+rows <- sample(nrow(train))
+shuffled <- train[rows,]
 
 #Then we split our data set for 5-fold cross validation
 t <- nrow(shuffled)/5
@@ -320,7 +322,7 @@ Accuracy <- as.data.frame(cbind(ACC, c(1:4)))
 Accuracy
 
 #Notice that the combination of sensitivity and specificity is optimized at 3 degrees of freedom, as is accuracy. 
-#Therefore, we will use 3 degrees of freedom in the spline going forward.
+#Therefore we will proceed with the spline model that has 3 degrees of freedom.
 
 
 #####Addressing Collinearity with backward selection#####
@@ -328,7 +330,7 @@ Accuracy
 #the "age" predictor, and one without.  We now address collinearity possibilities with
 #a backward selection process similar to what we used in linear modeling. (note, backward selection is the default for the "step()" function.)
 model_spline <- glm(Survived ~ SibSp + ns(Age, df = 3) + Pclass + Parch + Fare + sex_binary,
-                    data = titanic,
+                    data = train,
                     family = binomial)
 model_spline <- step(model_spline, trace = FALSE)
 
@@ -336,21 +338,21 @@ summary(model_spline)
 #Spline model features include; Siblings; Age; Class; Sex
 
 model_no_spline <- glm(Survived ~ SibSp + Age + Pclass + Parch + Fare + sex_binary,
-                       data = titanic,
+                       data = train,
                        family = binomial)
 model_no_spline <- step(model_no_spline, trace = FALSE)
 
 summary(model_no_spline)
 
-#No-spline model features included; siblings; Age; Class; Sex
 #####Cross-Validation/Comparing Models###################
 
 #cross validation to get additional information about how our models perform
+#We want to know if including a spline on the age feature is justified
 #First we shuffle our rows randomly.
 
 set.seed(3)
-rows <- sample(nrow(titanic))
-shuffled <- titanic[rows,]
+rows <- sample(nrow(train))
+shuffled <- train[rows,]
 
 #Then we split our data set for 5-fold cross validation.
 t <- nrow(shuffled)/5
@@ -554,13 +556,12 @@ mean_sensitivity_spline <- (sensitivity_spline1 + sensitivity_spline2 + sensitiv
 mean_sensitivity_spline
 
 
-#The introduction of the spline has a higher accuracy, however, due to the prevalences of surviving and not surviving, we need to be wary of moving forward
-#with an overly specific model.  If we simply predict that everyone will not survive, we would have an accuracy of around 62%, with 100% specificity.
-#Given the trade-off in sensitivity, it makes sense to use the model with no spline, even though it technically has a slightly lower raw accuracy.
+#The model with the spline has higher accuracy, but due to the relative prevalences is survival rate, it is important to pursue the model
+#that displays the optimal combination of sensitivity and specificity. Thereofore, we proceed with a model that uses no splines.
 #####Model Interpretation#####
 
 model_no_spline <- glm(Survived ~ SibSp + Age + Pclass + sex_binary,
-                       data = titanic, 
+                       data = train, 
                        family = binomial)
 summary(model_no_spline)
 
@@ -577,3 +578,21 @@ summary(model_no_spline)
 #Notice that the results related to class and sex especially align with our analysis from the "Additional Data Visualizations" section.
 #Also notice that the "fare" predictor was eliminated during the backward selection process for both models, this is likely because
 #that information is carried in the "Pclass" predictor.
+#####Final Prediction#####
+#So far we have determined what the best possible model with a spline on the age feature would look like, but also that
+#the best model will not have that spline; both using cross validation.  Now we take the model that we built from the training
+#set accesssed in the first section and use it to make a prediction on the test set we held out in the beginning.
+test <- test %>% mutate(predicted_percent_survival = predict(model_no_spline, newdata = test, type = "response"))
+test$predicted_percent_survival <- round(test$predicted_percent_survival)
+test$Survived <- as.numeric(test$Survived)
+test$Survived <- (test$Survived-1)
+sensitivity_final <- test %>% filter(Survived == 1) %>% summarise(sensitivity = sum(predicted_percent_survival)/dplyr::n())
+specificity_final <- test %>% filter(Survived == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival))/dplyr::n())
+sensitivity_final
+#0.7678571
+specificity_final
+#0.8837209
+#Note that the combination of sensitivity and specificity is quite good here; better than we've seen in training.
+#This indicates that we have produced a highly proficient model in terms of our ability to determine survival status
+#against a held out test set.
+
