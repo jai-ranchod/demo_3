@@ -15,8 +15,13 @@ library(readxl)
 library(corrplot)
 
 #First we'll load in the dataset, then we'll introduce it.
-d<-"https://docs.google.com/spreadsheets/d/0BxQfpNgXuWoIWUdZV1ZTc2ZscnM/export?format=csv"
-Lung_Capacity<-read.csv(d)
+h <- "https://docs.google.com/spreadsheets/d/0BxQfpNgXuWoIWUdZV1ZTc2ZscnM/edit?resourcekey=0-gqXT7Re2eUS2JGt_w1y4vA#gid=1055321634"
+t <- read_html(h)
+Nodes <- t %>% html_nodes("table")
+table <- html_table(Nodes[[1]])
+colnames(table) <- table[1,]
+table <- table[-1,]
+table <- table %>% select(LungCap, Age, Height, Smoke, Gender, Caesarean)
 
 Lung_Capacity$Smoke <- as.numeric(Lung_Capacity$Smoke == "yes")
 Lung_Capacity$Gender <- as.numeric(Lung_Capacity$Gender == "male")

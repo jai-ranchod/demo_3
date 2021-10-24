@@ -1,7 +1,11 @@
 #####Loading Libraries and Introducing Data#####
 #Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the infamous titanic wreck
 #of 1912.  We use the built in "titanic_train" data set to train a logistic regression model which we then test against
-#the (also built in) "titanic_test" data set.  
+#the (also built in) "titanic_test" data set.
+
+#We plainly have a binary outcome, we can reasonably assume there is independence among the observations, and a brief examination
+#of the data will clearly show that we have enough data points to puruse a logistic regression model.
+
 if (!require("titanic")) install.packages("titanic")
 if (!require("splines")) install.packages("splines")
 if (!require("broom")) install.packages("broom")
@@ -10,8 +14,6 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("tidyr")) install.packages("tidyr")
 if (!require("pedometrics")) install.packages("pedometrics")
-
-
 
 library(titanic)
 library(splines)
@@ -43,46 +45,142 @@ titanic$sex_binary <- as.integer(titanic$Sex == "male")
 #sex_binary - a different expression of Sex
 
 
-#####Linearity-Logit Assumption Check#####
 #Breaking down data into train and test split
 #Note that we are only using the "titanic_train" set here, not utilizing the "titanic_test" set at all.
 #This is because the "titanic_test" set does not have a column indicating survival status, and we want to 
 #apply our final model to a holdout test set to see how it performs.
-#For the purpose of evaluating assumptions, we'll use a 1/5 - 4/5 split.
+#For the purpose of model training in general, we'll use a 1/5 - 4/5 split.
 
 titanic <- titanic[,c(1,2,4,5,6,7,8)]
 set.seed(1)
 vec <- sample(c(1:nrow(titanic)), (nrow(titanic)/5),replace = FALSE)
 test <- titanic[vec,]
 train <- titanic[-vec,]
-#Now we can actually generate a model
-model <- glm(Survived ~., data = train, 
-             family = binomial)
+#####Linearity-Logit Assumption Check#####
+#We need to check the assumption of a linear relationship between our logit function and our continuous predictors
+l <- (train$Fare)
+q <- quantile(l, probs = c(0,0.2,0.4,0.6,0.8,1))
 
-#We need to generate a vector of probabilities associated with each row in order to perform diagnostics ensuring we are meeting the assumptions of
-#logistic regression
-probabilities <- predict(model, newdata = train, type = "response")
+p1 <- mean(as.numeric(train$Survived[l < q[[2]]])-1)
 
-#First we check the assumption of linearity between continuous predictors and the outcome logit.  To do this we must select our numeric type predictors.
-my_data <- train %>% select(Age, Fare)
-numeric_predictors <- colnames(my_data)
+p2 <- mean(as.numeric(train$Survived[l >= q[[2]] & l < q[[3]]])-1)
 
-#Now we separate out the predictors we have chosen along with their predicted percentage and logit
-mydata <- my_data %>%
-  mutate(logit = log(probabilities/(1-probabilities))) %>%
-  gather(key = "predictors", value = "predictor.value", -logit)
+p3 <- mean(as.numeric(train$Survived[l >= q[[3]] & l < q[[4]]])-1)
 
-#Now we create a visualization of the predictors versus associate logit values to asses our assumption of linearity
-ggplot(mydata, aes(logit, predictor.value))+
-  geom_point(size = 0.5, alpha = 0.5) +
-  geom_smooth(method = "loess") + 
-  theme_bw() + 
-  facet_wrap(~predictors, scales = "free_y")
-#Conclusion: we may need to apply a spline to the "age" predictor.  The "fare" predictor does not appear to need a spline.  Therefore, we will proceed
-#with a model that DOES include a spline on the "age" predictor and one that does NOT include a spline on the "age" predictor.  We will then compare their
-#respective performances via cross-validation and see if the inclusion of a spline is justified.
+p4 <- mean(as.numeric(train$Survived[l >= q[[4]] & l < q[[5]]])-1)
+
+p5 <- mean(as.numeric(train$Survived[l >= q[[5]]])-1)
+
+
+probs <- c(p1, p2, p3, p4, p5)
+
+logits <- log(probs/(1-probs))
+
+meds <- c(median(l[l<q[2]]),
+          median(l[l>=q[2] & l < q[3]]),
+          median(l[l>=q[3] & l < q[4]]),
+          median(l[l>=q[4] & l < q[5]]),
+          median(l[l>=q[5]]))
+
+plot(meds, logits)
+#It doesnt look like we meet the assumption of linearity of for the "Fare" predictor, but it looks like
+#a logarithmic transformation of the "Fare" predictor might do the trick.
+l <- log(train$Fare)
+q <- quantile(l, probs = c(0,0.2,0.4,0.6,0.8,1))
+
+p1 <- mean(as.numeric(train$Survived[l < q[[2]]])-1)
+
+p2 <- mean(as.numeric(train$Survived[l >= q[[2]] & l < q[[3]]])-1)
+
+p3 <- mean(as.numeric(train$Survived[l >= q[[3]] & l < q[[4]]])-1)
+
+p4 <- mean(as.numeric(train$Survived[l >= q[[4]] & l < q[[5]]])-1)
+
+p5 <- mean(as.numeric(train$Survived[l >= q[[5]]])-1)
+
+
+probs <- c(p1, p2, p3, p4, p5)
+
+logits <- log(probs/(1-probs))
+
+meds <- c(median(l[l<q[2]]),
+          median(l[l>=q[2] & l < q[3]]),
+          median(l[l>=q[3] & l < q[4]]),
+          median(l[l>=q[4] & l < q[5]]),
+          median(l[l>=q[5]]))
+
+plot(meds, logits)
+#Let's make this transformation in the data set now. First we need to recall that log(0) = -Inf so we need to remove any rows that contain 0
+#in the "Fare" column
+train <- train[-which(train$Fare == 0),]
+test <- test[-which(test$Fare == 0),]
+
+train$LogFare <- log(train$Fare)
+test$LogFare <- log(test$Fare)
+#We need to repeat the same process with our "Age" predictor
+
+l <- train$Age
+q <- quantile(l, probs = c(0,0.2,0.4,0.6,0.8,1))
+
+p1 <- mean(as.numeric(train$Survived[l < q[[2]]])-1)
+
+p2 <- mean(as.numeric(train$Survived[l >= q[[2]] & l < q[[3]]])-1)
+
+p3 <- mean(as.numeric(train$Survived[l >= q[[3]] & l < q[[4]]])-1)
+
+p4 <- mean(as.numeric(train$Survived[l >= q[[4]] & l < q[[5]]])-1)
+
+p5 <- mean(as.numeric(train$Survived[l >= q[[5]]])-1)
+
+probs <- c(p1, p2, p3, p4, p5)
+
+logits <- log(probs/(1-probs))
+
+meds <- c(median(l[l<q[2]]),
+          median(l[l>=q[2] & l < q[3]]),
+          median(l[l>=q[3] & l < q[4]]),
+          median(l[l>=q[4] & l < q[5]]),
+          median(l[l>=q[5]]))
+
+plot(meds, logits)
+meds
+#This relationship is definitely not linear and it does not appear that there is an easy way to transform
+#the "Age" predictor to make the linearity/logit assumption work out.  We do notice, however, that the logits
+#do tend to fall into 3 distinct categories; those for ages below 20, those for ages between 20 and 31.5, and 
+#those for ages above 31.5. (15 deteremined via average of meds[1], meds[2]; 31.5 determined via average of meds[3], meds[4])
+#We can make categorical variables for our data set accordingly using the "age" predictor.
+train$AgeLow <- as.numeric(train$Age < 15)
+train$AgeLow <- factor(train$AgeLow)
+
+train$AgeMid <- as.numeric(train$Age >= 15 & train$Age < 31.5)
+train$AgeMid <- factor(train$AgeMid)
+
+train$AgeHigh <- as.numeric(train$Age >= 31.5)
+train$AgeHigh <- factor(train$AgeHigh)
+
+test$AgeLow <- as.numeric(test$Age < 15)
+test$AgeLow <- factor(test$AgeLow)
+
+test$AgeMid <- as.numeric(test$Age >= 15 & test$Age < 31.5)
+test$AgeMid <- factor(test$AgeMid)
+
+test$AgeHigh <- as.numeric(test$Age >= 31.5)
+test$AgeHigh <- factor(test$AgeHigh)
+
+train <- train %>% select(Survived, Pclass, SibSp, Parch, LogFare, sex_binary, AgeLow, AgeMid, AgeHigh)
+test <- test %>% select(Survived, Pclass, SibSp, Parch, LogFare, sex_binary, AgeLow, AgeMid, AgeHigh)
+#####Addressing (Multi)Collinearity#####
+#Here we create an initial model and correct any collinearity issues with the help of the vif() function.
+model <- glm(Survived ~ Pclass + SibSp + Parch + LogFare + sex_binary + AgeHigh + AgeMid + AgeLow, data = train, family = "binomial")#AgeLow + AgeMid + AgeHigh, data = train, family = "binomial")
+vif(model)
+#Notice that we get an error regarding aliased coefficients.  We can investigate this further with the alias() function
+alias(model)
+#We see that we need to remove the "Age_Low" predictor as it is a linear combination fo AgeHigh and AgeMid
+model <- glm(Survived ~ Pclass + SibSp + Parch + LogFare + sex_binary + AgeHigh + AgeMid, data = train, family = "binomial")#AgeLow + AgeMid + AgeHigh, data = train, family = "binomial")
+vif(model)
+#We see that none of our remaining features have a VIF much higher than 4, indicating all of them should remain in the model
 #####Assumption of No Influential Outliers#####
-#Before we deal with the non-linearity of the age model, we have to investigate the possibility of influential outlier values.
+#Now we have to investigate the possibility of influential outlier values.
 #First, let's look at Cook's distance for our most visually noticeable possible outliers.
 plot(model, which = 4,id.n = 8)
 
@@ -100,499 +198,29 @@ ggplot(model.data, aes(index, .std.resid)) +
   scale_color_discrete(name = "Survival Status", labels = c("Did Not Survive", "Survived"))
 
 #We notice that we have no standardized residuals over absolute value of 3, so we can be confident that we do not have influential outliers.
-#####Introduction of Splines############
+#####Feature Selection#####
+#Here we examine the impact of each of our features and determine which features to retain and which to discard.
+summary(model)
+#Here we notice that "LogFare" and "Parch" have relatively low magnitude z-statistics, indicating they may not be related to the
+#outcome.  We will remove these features for our final model.
+model <- glm(Survived ~ Pclass + SibSp + sex_binary + AgeHigh + AgeMid, data = train, family = "binomial")
 
 
-#Optimizing the number of degrees of freedom via cross-validation; we suspect there would be up to
-# 4 regions (df = 3) for age based on graphics from the exploratory phase; we want to allow for the possibility 
-#that each area of the domain might need it's own piece of the piece-wise polynomial.
-#We'll add one more in the interest of exploring additional possibilities
-
-#Histogram to provide some additional intuition about how many degrees of freedom may be appropriate
-train %>% ggplot(aes(x = Age))+
-  geom_density()+
-  xlab("Age")+
-  ylab("Density")+
-  ggtitle("Estimating Initial Degrees of Freedom: Age")
-
-#The plot indicates that testing up to 3 degrees of freedom is appropriate, again recall we are exploring the possibility 
-#of up to 4 (one additional degree of freedom) to be sure we are considering all reasonable possibilities.
-#Here we use cross validation to find out what the ideal number of degrees of freedom for the Age spline is.  We randomly select 1/5 of the data to test and 4/5 
-#to train.  For each iteration, each number of degrees of freedom (1-4) will be used to create a model and accuracy will be calculated.  We define accuracy as simply a 
-#result that matches a prediction.  Inaccuracies are results that do not match a prediction; we do not distinguish between false positives and false negatives
-#for these purposes.  The degree of freedom that is most frequently the most accurate will then be adopted by the model.
-#setting seed and shuffling data
-set.seed(2)
-rows <- sample(nrow(train))
-shuffled <- train[rows,]
-
-#Then we split our data set for 5-fold cross validation
-t <- nrow(shuffled)/5
-df1 <- shuffled[1:t,]
-df2 <- shuffled[(t+1):(2*t),]
-df3 <- shuffled[((2*t)+1):(3*t),]
-df4 <- shuffled[((3*t)+1):(4*t),]
-df5 <- shuffled[((4*t)+1):(5*t),]
-
-#Beginning first fold
-train1 <- bind_rows(df2,df3, df4, df5)
-test1 <- df1
-
-test1 <- test1 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-accuracy_data_1 <- data.frame()
-
-for(i in 1:4)
-{
-  
-  
-  model_1 <- glm(Survived ~ +SibSp + ns(Age, df = i) + Pclass + Parch + Fare,
-                 data = train1,
-                 family = binomial)
-  model_1 <- step(model_1, trace = FALSE)
-  
-  df_1 <- test1 %>% mutate(predicted_percent_survival = predict(newdata = test1, model_1, type = "response"))
-  df_1$predicted_percent_survival <- round(df_1$predicted_percent_survival)
-  df_1 <- df_1 %>% mutate(diff = abs(survived_numeric-predicted_percent_survival))
-  accuracy_data_1[i,1] <- 1-(sum(df_1$diff)/nrow(df_1))
-  accuracy_data_1[i,2] <- i
-  accuracy_data_1[i,3] <- df_1 %>% filter(survived_numeric == 1) %>% summarize(sensitivity = sum(predicted_percent_survival)/dplyr::n()) %>% pull(sensitivity)
-  accuracy_data_1[i,4] <- df_1 %>% filter(survived_numeric == 0) %>% summarize(specificity = 1-mean(predicted_percent_survival)) %>% pull(specificity)
-  
-  df_1 <- NA
-}
-colnames(accuracy_data_1)[1] <- "Accuracy1"
-colnames(accuracy_data_1)[2] <- "Degrees of Freedom"
-colnames(accuracy_data_1)[3] <- "Sensitivity"
-colnames(accuracy_data_1)[4] <- "Specificity"
-                          
-#Beginning second fold
-train2 <- bind_rows(df1,df3, df4, df5)
-test2 <- df2
-test2 <- test2 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-
-accuracy_data_2 <- data.frame()
-
-for(i in 1:4)
-{
-  
-  
-  model_2 <- glm(Survived ~ +SibSp + ns(Age, df = i) + Pclass + Parch + Fare,
-                 data = train2,
-                 family = binomial)
-  model_2 <- step(model_2, trace = FALSE)
-  
-  df_2 <- test2 %>% mutate(predicted_percent_survival = predict(newdata = test2, model_2, type = "response"))
-  df_2$predicted_percent_survival <- round(df_2$predicted_percent_survival)
-  df_2 <- df_2 %>% mutate(diff = abs(survived_numeric-predicted_percent_survival))
-  accuracy_data_2[i,1] <- 1-(sum(df_2$diff)/nrow(df_2))
-  accuracy_data_2[i,2] <- i
-  accuracy_data_2[i,3] <- df_2 %>% filter(survived_numeric == 1) %>% summarize(sensitivity = sum(predicted_percent_survival)/dplyr::n()) %>% pull(sensitivity)
-  accuracy_data_2[i,4] <- df_2 %>% filter(survived_numeric == 0) %>% summarize(specificity = 1-mean(predicted_percent_survival)) %>% pull(specificity)
-  
-  df_2 <- NA
-}
-colnames(accuracy_data_2)[1] <- "Accuracy2"
-colnames(accuracy_data_2)[2] <- "Degrees of Freedom"
-colnames(accuracy_data_2)[3] <- "Sensitivity"
-colnames(accuracy_data_2)[4] <- "Specificity"
-
-#Beginning third fold
-train3 <- bind_rows(df1,df2, df4, df5)
-test3 <- df3
-test3 <- test3 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-
-accuracy_data_3 <- data.frame()
-
-for(i in 1:4)
-{
-  
-  
-  model_3 <- glm(Survived ~ +SibSp + ns(Age, df = i) + Pclass + Parch + Fare,
-                 data = train3,
-                 family = binomial)
-  model_3 <- step(model_3, trace = FALSE)
-  
-  df_3 <- test3 %>% mutate(predicted_percent_survival = predict(newdata = test3, model_3, type = "response"))
-  df_3$predicted_percent_survival <- round(df_3$predicted_percent_survival)
-  df_3 <- df_3 %>% mutate(diff = abs(survived_numeric-predicted_percent_survival))
-  accuracy_data_3[i,1] <- 1-(sum(df_3$diff)/nrow(df_3))
-  accuracy_data_3[i,2] <- i
-  accuracy_data_3[i,3] <- df_3 %>% filter(survived_numeric == 1) %>% summarize(sensitivity = sum(predicted_percent_survival)/dplyr::n()) %>% pull(sensitivity)
-  accuracy_data_3[i,4] <- df_3 %>% filter(survived_numeric == 0) %>% summarize(specificity = 1-mean(predicted_percent_survival)) %>% pull(specificity)
-  
-  df_3 <- NA
-}
-
-colnames(accuracy_data_3)[1] <- "Accuracy3"
-colnames(accuracy_data_3)[2] <- "Degrees of Freedom"
-colnames(accuracy_data_3)[3] <- "Sensitivity"
-colnames(accuracy_data_3)[4] <- "Specificity"
-
-#Starting fourth fold
-train4 <- bind_rows(df1,df2, df3, df4)
-test4 <- df4
-test4 <- test4 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-
-accuracy_data_4 <- data.frame()
-
-for(i in 1:4)
-{
-  
-  
-  model_4 <- glm(Survived ~ +SibSp + ns(Age, df = i) + Pclass + Parch + Fare,
-                 data = train4,
-                 family = binomial)
-  model_4 <- step(model_4, trace = FALSE)
-  
-  df_4 <- test4 %>% mutate(predicted_percent_survival = predict(newdata = test4, model_4, type = "response"))
-  df_4$predicted_percent_survival <- round(df_4$predicted_percent_survival)
-  df_4 <- df_4 %>% mutate(diff = abs(survived_numeric-predicted_percent_survival))
-  accuracy_data_4[i,1] <- 1-(sum(df_4$diff)/nrow(df_4))
-  accuracy_data_4[i,2] <- i
-  accuracy_data_4[i,3] <- df_4 %>% filter(survived_numeric == 1) %>% summarize(sensitivity = sum(predicted_percent_survival)/dplyr::n()) %>% pull(sensitivity)
-  accuracy_data_4[i,4] <- df_4 %>% filter(survived_numeric == 0) %>% summarize(specificity = 1-mean(predicted_percent_survival)) %>% pull(specificity)
-  
-  df_4 <- NA
-}
-
-colnames(accuracy_data_4)[1] <- "Accuracy4"
-colnames(accuracy_data_4)[2] <- "Degrees of Freedom"
-colnames(accuracy_data_4)[3] <- "Sensitivity"
-colnames(accuracy_data_4)[4] <- "Specificity"
-
-#Starting fifth fold
-
-train5 <- bind_rows(df1,df2, df3, df4)
-test5 <- df5
-test5 <- test5 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-
-accuracy_data_5 <- data.frame()
-
-for(i in 1:4)
-{
-  
-  
-  model_5 <- glm(Survived ~ +SibSp + ns(Age, df = i) + Pclass + Parch + Fare,
-                 data = train5,
-                 family = binomial)
-  model_5 <- step(model_5, trace = FALSE)
-  
-  df_5 <- test5 %>% mutate(predicted_percent_survival = predict(newdata = test5, model_5, type = "response"))
-  df_5$predicted_percent_survival <- round(df_5$predicted_percent_survival)
-  df_5 <- df_5 %>% mutate(diff = abs(survived_numeric-predicted_percent_survival))
-  accuracy_data_5[i,1] <- 1-(sum(df_5$diff)/nrow(df_5))
-  accuracy_data_5[i,2] <- i
-  accuracy_data_5[i,3] <- df_5 %>% filter(survived_numeric == 1) %>% summarize(sensitivity = sum(predicted_percent_survival)/dplyr::n()) %>% pull(sensitivity)
-  accuracy_data_5[i,4] <- df_5 %>% filter(survived_numeric == 0) %>% summarize(specificity = 1-mean(predicted_percent_survival)) %>% pull(specificity)
-  
-  df_5 <- NA
-}
-
-colnames(accuracy_data_5)[1] <- "Accuracy5"
-colnames(accuracy_data_5)[2] <- "Degrees of Freedom"
-colnames(accuracy_data_5)[3] <- "Sensitivity"
-colnames(accuracy_data_5)[4] <- "Specificity"
-#Evaluating Cross-validation by finding the average accuracy, sensitivity, and specificity 
-#for each cross validation fold
-
-Sensitivity_vec <- vector()
-Specificity_vec <- vector()
-
-SENS <- sapply(c(1:4), function(j){
-  Sensitivity_vec[j] <- (accuracy_data_1$Sensitivity[j] + accuracy_data_2$Sensitivity[j] + accuracy_data_3$Sensitivity[j] + accuracy_data_4$Sensitivity[j] + accuracy_data_5$Sensitivity[j])/5
-})
-Sensitivity <- as.data.frame(cbind(SENS, c(1:4)))
-Sensitivity
-
-SPC <- sapply(c(1:4), function(j){
-  Specificity_vec[j] <- (accuracy_data_1$Specificity[j] + accuracy_data_2$Specificity[j] + accuracy_data_3$Specificity[j] + accuracy_data_4$Specificity[j] + accuracy_data_5$Specificity[j])/5
-  })
-Specificity <- as.data.frame(cbind(SPC, c(1:4)))
-Specificity
-
-ACC <- sapply(c(1:4), function(j){
-  Specificity_vec[j] <- (accuracy_data_1$Accuracy1[j] + accuracy_data_2$Accuracy2[j] + accuracy_data_3$Accuracy3[j] + accuracy_data_4$Accuracy4[j] + accuracy_data_5$Accuracy5[j])/5
-})
-Accuracy <- as.data.frame(cbind(ACC, c(1:4)))
-Accuracy
-
-#Notice that the combination of sensitivity and specificity is optimized at 3 degrees of freedom, as is accuracy. 
-#Therefore we will proceed with the spline model that has 3 degrees of freedom.
-
-
-#####Addressing Collinearity with backward selection#####
-#Now that we know how many degrees of freedom we want to use in the spline model, we can continue building our models, one with a spline on
-#the "age" predictor, and one without.  We now address collinearity possibilities with
-#a backward selection process similar to what we used in linear modeling. (note, backward selection is the default for the "step()" function.)
-model_spline <- glm(Survived ~ SibSp + ns(Age, df = 3) + Pclass + Parch + Fare + sex_binary,
-                    data = train,
-                    family = binomial)
-model_spline <- step(model_spline, trace = FALSE)
-
-summary(model_spline)
-#Spline model features include; Siblings; Age; Class; Sex
-
-model_no_spline <- glm(Survived ~ SibSp + Age + Pclass + Parch + Fare + sex_binary,
-                       data = train,
-                       family = binomial)
-model_no_spline <- step(model_no_spline, trace = FALSE)
-
-summary(model_no_spline)
-
-#####Cross-Validation/Comparing Models###################
-
-#cross validation to get additional information about how our models perform
-#We want to know if including a spline on the age feature is justified
-#First we shuffle our rows randomly.
-
-set.seed(3)
-rows <- sample(nrow(train))
-shuffled <- train[rows,]
-
-#Then we split our data set for 5-fold cross validation.
-t <- nrow(shuffled)/5
-df1 <- shuffled[1:t,]
-df2 <- shuffled[(t+1):(2*t),]
-df3 <- shuffled[((2*t)+1):(3*t),]
-df4 <- shuffled[((3*t)+1):(4*t),]
-df5 <- shuffled[((4*t)+1):(5*t),]
-
-#Beginning first fold
-train1 <- bind_rows(df2,df3, df4, df5)
-test1 <- df1
-
-model_spline_1 <- glm(Survived ~SibSp + ns(Age, df = 3) + Pclass + sex_binary,
-                      data = train1, 
-                      family = binomial)
-test1 <- test1 %>% mutate(predicted_percent_survival_no_spline = predict(model_spline_1, newdata = test1, type = "response"))
-
-model_no_spline_1 <- glm(Survived ~SibSp + Age + Pclass + sex_binary,
-                         data = train1, 
-                         family = binomial)
-test1 <- test1 %>% mutate(predicted_percent_survival_spline = predict(model_no_spline_1, newdata = test1, type = "response"))
-
-test1$predicted_percent_survival_no_spline <- round(test1$predicted_percent_survival_no_spline)
-test1$predicted_percent_survival_spline <- round(test1$predicted_percent_survival_spline)
-
-test1 <- test1 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-test1 <- test1 %>% mutate(diff_no_spline = abs(survived_numeric-predicted_percent_survival_no_spline))
-test1 <- test1 %>% mutate(diff_spline = abs(survived_numeric-predicted_percent_survival_spline))
-
-
-sensitivity_no_spline1 <- test1 %>% filter(survived_numeric == 1) %>% summarise(sensitivity = sum(predicted_percent_survival_no_spline)/dplyr::n())
-specificity_no_spline1 <- test1 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_no_spline))/dplyr::n())
-
-sensitivity_spline1 <- test1 %>% filter(survived_numeric == 1) %>% summarise(sensivity = sum(predicted_percent_survival_spline)/dplyr::n())
-specificity_spline1 <- test1 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_spline))/dplyr::n())
-
-accuracy1_no_spline <- 1-(sum(test1$diff_no_spline)/nrow(test1))
-accuracy1_spline <- 1-(sum(test1$diff_spline)/nrow(test1))
-
-
-#Beginning second fold
-train2 <- bind_rows(df1,df3, df4, df5)
-test2 <- df2
-
-model_spline_2 <- glm(Survived ~SibSp + ns(Age, df = 3) + Pclass + sex_binary,
-                      data = train2, 
-                      family = binomial)
-test2 <- test2 %>% mutate(predicted_percent_survival_no_spline = predict(model_spline_2, newdata = test2, type = "response"))
-
-model_no_spline_2 <- glm(Survived ~SibSp + Age + Pclass + sex_binary,
-                         data = train2, 
-                         family = binomial)
-test2 <- test2 %>% mutate(predicted_percent_survival_spline = predict(model_no_spline_2, newdata = test2, type = "response"))
-
-test2$predicted_percent_survival_no_spline <- round(test2$predicted_percent_survival_no_spline)
-test2$predicted_percent_survival_spline <- round(test2$predicted_percent_survival_spline)
-
-test2 <- test2 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-test2 <- test2 %>% mutate(diff_no_spline = abs(survived_numeric-predicted_percent_survival_no_spline))
-test2 <- test2 %>% mutate(diff_spline = abs(survived_numeric-predicted_percent_survival_spline))
-
-
-sensitivity_no_spline2 <- test2 %>% filter(survived_numeric == 1) %>% summarise(sensitivity = sum(predicted_percent_survival_no_spline)/dplyr::n())
-specificity_no_spline2 <- test2 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_no_spline))/dplyr::n())
-
-sensitivity_spline2 <- test2 %>% filter(survived_numeric == 1) %>% summarise(sensivity = sum(predicted_percent_survival_spline)/dplyr::n())
-specificity_spline2 <- test2 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_spline))/dplyr::n())
-
-accuracy2_no_spline <- 1-(sum(test2$diff_no_spline)/nrow(test2))
-accuracy2_spline <- 1-(sum(test2$diff_spline)/nrow(test2))
-
-#beginning third fold
-
-train3 <- bind_rows(df1,df2, df4, df5)
-test3 <- df3
-
-model_spline_3 <- glm(Survived ~SibSp + ns(Age, df = 3) + Pclass + sex_binary,
-                      data = train3, 
-                      family = binomial)
-test3 <- test3 %>% mutate(predicted_percent_survival_no_spline = predict(model_spline_3, newdata = test3, type = "response"))
-
-model_no_spline_3 <- glm(Survived ~SibSp + Age + Pclass + sex_binary,
-                         data = train3, 
-                         family = binomial)
-test3 <- test3 %>% mutate(predicted_percent_survival_spline = predict(model_no_spline_3, newdata = test3, type = "response"))
-
-test3$predicted_percent_survival_no_spline <- round(test3$predicted_percent_survival_no_spline)
-test3$predicted_percent_survival_spline <- round(test3$predicted_percent_survival_spline)
-
-test3 <- test3 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-test3 <- test3 %>% mutate(diff_no_spline = abs(survived_numeric-predicted_percent_survival_no_spline))
-test3 <- test3 %>% mutate(diff_spline = abs(survived_numeric-predicted_percent_survival_spline))
-
-
-sensitivity_no_spline3 <- test3 %>% filter(survived_numeric == 1) %>% summarise(sensitivity = sum(predicted_percent_survival_no_spline)/dplyr::n())
-specificity_no_spline3 <- test3 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_no_spline))/dplyr::n())
-
-sensitivity_spline3 <- test3 %>% filter(survived_numeric == 1) %>% summarise(sensivity = sum(predicted_percent_survival_spline)/dplyr::n())
-specificity_spline3 <- test3 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_spline))/dplyr::n())
-
-accuracy3_no_spline <- 1-(sum(test3$diff_no_spline)/nrow(test3))
-accuracy3_spline <- 1-(sum(test3$diff_spline)/nrow(test3))
-
-#Starting fourth fold
-
-train4 <- bind_rows(df1,df2, df3, df5)
-test4 <- df4
-
-model_spline_4 <- glm(Survived ~ SibSp + ns(Age, df = 3) + Pclass + sex_binary,
-                      data = train4, 
-                      family = binomial)
-test4 <- test4 %>% mutate(predicted_percent_survival_no_spline = predict(model_spline_4, newdata = test4, type = "response"))
-
-model_no_spline_4 <- glm(Survived ~SibSp + Age + Pclass + sex_binary,
-                         data = train4, 
-                         family = binomial)
-test4 <- test4 %>% mutate(predicted_percent_survival_spline = predict(model_no_spline_4, newdata = test4, type = "response"))
-
-test4$predicted_percent_survival_no_spline <- round(test4$predicted_percent_survival_no_spline)
-test4$predicted_percent_survival_spline <- round(test4$predicted_percent_survival_spline)
-
-test4 <- test4 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-test4 <- test4 %>% mutate(diff_no_spline = abs(survived_numeric-predicted_percent_survival_no_spline))
-test4 <- test4 %>% mutate(diff_spline = abs(survived_numeric-predicted_percent_survival_spline))
-
-
-sensitivity_no_spline4 <- test4 %>% filter(survived_numeric == 1) %>% summarise(sensitivity = sum(predicted_percent_survival_no_spline)/dplyr::n())
-specificity_no_spline4 <- test4 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_no_spline))/dplyr::n())
-
-sensitivity_spline4 <- test4 %>% filter(survived_numeric == 1) %>% summarise(sensivity = sum(predicted_percent_survival_spline)/dplyr::n())
-specificity_spline4 <- test4 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_spline))/dplyr::n())
-
-accuracy4_no_spline <- 1-(sum(test4$diff_no_spline)/nrow(test4))
-accuracy4_spline <- 1-(sum(test4$diff_spline)/nrow(test4))
-
-#Starting fifth fold
-
-train5 <- bind_rows(df1,df2, df3, df4)
-test5 <- df5
-
-model_spline_5 <- glm(Survived ~ SibSp + ns(Age, df = 3) + Pclass + sex_binary,
-                      data = train5, 
-                      family = binomial)
-test5 <- test5 %>% mutate(predicted_percent_survival_no_spline = predict(model_spline_5, newdata = test5, type = "response"))
-
-model_no_spline_5 <- glm(Survived ~SibSp + Age + Pclass + sex_binary,
-                         data = train5, 
-                         family = binomial)
-test5 <- test5 %>% mutate(predicted_percent_survival_spline = predict(model_no_spline_5, newdata = test5, type = "response"))
-
-test5$predicted_percent_survival_no_spline <- round(test5$predicted_percent_survival_no_spline)
-test5$predicted_percent_survival_spline <- round(test5$predicted_percent_survival_spline)
-
-test5 <- test5 %>% mutate(survived_numeric = as.numeric(Survived)-1)
-
-test5 <- test5 %>% mutate(diff_no_spline = abs(survived_numeric-predicted_percent_survival_no_spline))
-test5 <- test5 %>% mutate(diff_spline = abs(survived_numeric-predicted_percent_survival_spline))
-
-
-sensitivity_no_spline5 <- test5 %>% filter(survived_numeric == 1) %>% summarise(sensitivity = sum(predicted_percent_survival_no_spline)/dplyr::n())
-specificity_no_spline5 <- test5 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_no_spline))/dplyr::n())
-
-sensitivity_spline5 <- test5 %>% filter(survived_numeric == 1) %>% summarise(sensivity = sum(predicted_percent_survival_spline)/dplyr::n())
-specificity_spline5 <- test5 %>% filter(survived_numeric == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival_spline))/dplyr::n())
-
-accuracy5_no_spline <- 1-(sum(test5$diff_no_spline)/nrow(test5))
-accuracy5_spline <- 1-(sum(test5$diff_spline)/nrow(test5))
-
-
-#####PLEASE READ THIS#####
-
-#Before proceeding, it is also worth mentioning that by simply making assumptions about survival rate based on class and 
-#sex, one can create a reasonably successful predictive model.  One can see this in the "additional data visualizations" file.  
-#This methodology provides a lower sensitivity than this logistic regression model however, and the trade-off makes it less successful in ROC
-#and balanced accuracy.
-#I am aware of this, the purpose of this file is to illustrate the construction of a logistic regression model.
-
-#####OK, keep going####
-
-mean_accuracy_no_spline <- (accuracy1_no_spline + accuracy2_no_spline + accuracy3_no_spline + accuracy4_no_spline + accuracy5_no_spline)/5
-mean_accuracy_no_spline
-
-mean_accuracy_spline <- (accuracy1_spline + accuracy2_spline + accuracy3_spline + accuracy5_spline + accuracy5_spline)/5
-mean_accuracy_spline
-
-mean_specificity_no_spline <- (specificity_no_spline1 + specificity_no_spline2 + specificity_no_spline3 + specificity_no_spline4 + specificity_no_spline5)/5
-mean_specificity_no_spline
-
-mean_sensitivity_no_spline <- (sensitivity_no_spline1 + sensitivity_no_spline2 + sensitivity_no_spline3 + sensitivity_no_spline4 + sensitivity_no_spline5)/5
-mean_sensitivity_no_spline
-
-mean_Specificity_spline <- (specificity_spline1 + specificity_spline2 + specificity_spline3 + specificity_spline4 + specificity_spline5)/5
-mean_Specificity_spline
-
-mean_sensitivity_spline <- (sensitivity_spline1 + sensitivity_spline2 + sensitivity_spline3 + sensitivity_spline4 + sensitivity_spline5)/5
-mean_sensitivity_spline
-
-
-#The model with the spline has higher accuracy, but due to the relative prevalences is survival rate, it is important to pursue the model
-#that displays the optimal combination of sensitivity and specificity. Thereofore, we proceed with a model that uses no splines.
-#####Model Interpretation#####
-
-model_no_spline <- glm(Survived ~ SibSp + Age + Pclass + sex_binary,
-                       data = train, 
-                       family = binomial)
-summary(model_no_spline)
-
-#Recall "sex_binary is 1 for male, 0 for female
-#The log odds of survival decrease as the number of siblings a passenger has increases
-#the log odds of survival decrease, in general, as the age increases
-#The log odds of survival are lower for second class passengers as opposed to first class(the reference class) and the log odds of survival are MUCH
-#lower for passengers in 3rd class than first class
-#The log odds of survival are much lower for males than for females
-#Recall that each feature increases or decrease in accordance with the logistic regression formula:
-#p = exp(a)/(1+exp(a))
-#where a = B_0 + B_1*x_1 + B_2*x_2...
-#and p is the probability of the event (in this case, surviving)
-#Notice that the results related to class and sex especially align with our analysis from the "Additional Data Visualizations" section.
-#Also notice that the "fare" predictor was eliminated during the backward selection process for both models, this is likely because
-#that information is carried in the "Pclass" predictor.
 #####Final Prediction#####
 #So far we have determined what the best possible model with a spline on the age feature would look like, but also that
 #the best model will not have that spline; both using cross validation.  Now we take the model that we built from the training
 #set accesssed in the first section and use it to make a prediction on the test set we held out in the beginning.
-test <- test %>% mutate(predicted_percent_survival = predict(model_no_spline, newdata = test, type = "response"))
+test <- test %>% mutate(predicted_percent_survival = predict(model, newdata = test, type = "response"))
 test$predicted_percent_survival <- round(test$predicted_percent_survival)
 test$Survived <- as.numeric(test$Survived)
 test$Survived <- (test$Survived-1)
 sensitivity_final <- test %>% filter(Survived == 1) %>% summarise(sensitivity = sum(predicted_percent_survival)/dplyr::n())
 specificity_final <- test %>% filter(Survived == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival))/dplyr::n())
 sensitivity_final
-#0.7678571
+#0.7454545
 specificity_final
-#0.8837209
-#Note that the combination of sensitivity and specificity is quite good here; better than we've seen in training.
-#This indicates that we have produced a highly proficient model in terms of our ability to determine survival status
-#against a held out test set.
-
+#0.8941176
+#We have now completed a successful logistic regression modeling of survival on the titanic.  
+#We have checked all of the necessary assumptions associated with logistic regression and adpated our data accordingly.
+#We then selected our feature set using the z-statistic.
+#Finally, we tested our model against our hold out test set to determine that our model works quite well.
