@@ -203,7 +203,7 @@ ggplot(model.data, aes(index, .std.resid)) +
 summary(model)
 #Here we notice that "LogFare" and "Parch" have relatively low magnitude z-statistics, indicating they may not be related to the
 #outcome.  We will remove these features for our final model.
-model <- glm(Survived ~ Pclass + SibSp + sex_binary + AgeHigh + AgeMid, data = train, family = "binomial")
+model <- glm(Survived ~ Pclass  + sex_binary SibSp + AgeHigh + AgeMid, data = train, family = "binomial")
 
 
 #####Final Prediction#####
