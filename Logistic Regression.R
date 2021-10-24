@@ -200,11 +200,12 @@ ggplot(model.data, aes(index, .std.resid)) +
 #We notice that we have no standardized residuals over absolute value of 3, so we can be confident that we do not have influential outliers.
 #####Feature Selection#####
 #Here we examine the impact of each of our features and determine which features to retain and which to discard.
+#Note that p << n in this case
 summary(model)
 #Here we notice that "LogFare" and "Parch" have relatively low magnitude z-statistics, indicating they may not be related to the
-#outcome.  We will remove these features for our final model.
-model <- glm(Survived ~ Pclass  + sex_binary SibSp + AgeHigh + AgeMid, data = train, family = "binomial")
-
+#outcome.  We see that the step() function removes these features for our final model.
+model <- step(model)
+summary(model)
 
 #####Final Prediction#####
 #So far we have determined what the best possible model with a spline on the age feature would look like, but also that
