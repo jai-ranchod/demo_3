@@ -7,11 +7,8 @@
 
 #####Loading Libraries and Introducing Data#####
 #Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the infamous titanic wreck
-#of 1912.  We use the built in "titanic_train" data set to train a logistic regression model which we then test against
+#of 1912.  We use the built in "titanic_train" data set to train a k-nearest neighboers model which we then test against
 #a held out test subset of the "titanic_train" data set.
-
-#We plainly have a binary outcome, we can reasonably assume there is independence among the observations, and a brief examination
-#of the data will clearly show that we have enough data points to puruse a logistic regression model.
 
 if (!require("titanic")) install.packages("titanic")
 if (!require("splines")) install.packages("splines")
