@@ -1,5 +1,5 @@
 #####KNN#####
-#We also notice that the ratio of predictors p to observations n is quite low indicating a k-nearest neighbors 
+#We also notice that the ratio of predictors p to observations n is quite high indicating a k-nearest neighbors 
 #model may work well.  The p/n ratio is important for this model; in k-nearest neighbors we need to have
 #confidence that there will be a sufficient density of observations in p-dimensional space.  Otherwise we
 #compare our test data to observations that are not actually very similar.
