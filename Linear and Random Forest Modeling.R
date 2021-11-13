@@ -22,7 +22,11 @@ table <- html_table(Nodes[[1]])
 colnames(table) <- table[1,]
 table <- table[-1,]
 table <- table %>% select(LungCap, Age, Height, Smoke, Gender, Caesarean)
+Lung_Capacity <- table
 
+Lung_Capacity$LungCap <- as.numeric(Lung_Capacity$Lung)
+Lung_Capacity$Age <- as.numeric(Lung_Capacity$Age)
+Lung_Capacity$Height <- as.numeric(Lung_Capacity$Height)
 Lung_Capacity$Smoke <- as.numeric(Lung_Capacity$Smoke == "yes")
 Lung_Capacity$Gender <- as.numeric(Lung_Capacity$Gender == "male")
 Lung_Capacity$Caesarean <- as.numeric(Lung_Capacity$Caesarean == "yes")
@@ -52,7 +56,12 @@ max(Lung_Capacity$Age)
 #####Linear Modeling:  Checking Assumptions of Linear Modeling#####
 #The first thing we need to do is check for collinearity.  We will do this by first 
 #converting the binary predictors to factors, then checking the
-#variance inflation factors.
+#variance inflation factors. The stepVIF() function uses a step-wise approach to feature selection based on 
+#variance inflation factors.  The default threshold is 10, which we leave in place here.  For reference
+#the variance inflation factor of a predictor i is defined as:
+#
+#VIF_i = 1/(1-(R_i)^2)
+#where (R_i)^2 is the coefficient of determination of the regression of all other predictors onto the ith predictor.
 
 Capacity <- as.data.frame(Lung_Capacity)
 Capacity$Smoker_YN <- as.factor(Capacity$Smoker_YN)
@@ -62,24 +71,9 @@ Capacity$Caesarean_YN <- as.factor(Capacity$Caesarean_YN)
 Model <- lm(LungCap ~ Age + Height + Smoker_YN + Male_YN + Caesarean_YN, data = Capacity)
 stepVIF(Model)
 
-Model <- stepVIF(Model)
-
-#For these purposes, we'll keep the stepVIF default threshold of 10.
 #All of our predictors meet our threshold and can stay in the model for now. 
-#Next we see what the model looks like.
 
-summary(Model)
 
-#Here we see that we are describing approximately 85% of the variation in lung capacity with our predictors. 
-#We further see that we have a highly statistically significant F-statistic.
-#Unsurprisingly we note that being a smoker reduces lung capacity. 
-#We note as well that age increases lung capacity which may seem counter-intuitive, until we recall that the maximum age in this dataset is 19.
-#Recall running the following code:
-
-min(Lung_Capacity$Age)
-max(Lung_Capacity$Age)
-
-#We finally must make sure we are meeting the assumptions of linear modeling.  
 #We do not know anything about the data collection process, so we cannot be sure that the samples are genuinely independent.
 #However, we will assume for now that they are.  Next, we can generate diagnostic plots with the simple plot() function.
 
@@ -115,7 +109,7 @@ test_y <- test$LungCap
 
 set.seed(3)
 control <- trainControl(method="cv", number = 5)
-LinearModel <- train(train_x, train_y, method = "lm", trControl = control)
+LinearModel <- caret::train(LungCap ~., data = train, method = "lm", trControl = control)
 
 summary(LinearModel)
 
@@ -127,7 +121,7 @@ summary(LinearModel)
 #Here we run the model produced by cross-validation against the test set that we held out at
 #the very beginning.
 
-lmPredictions <- predict(LinearModel, test_x)
+lmPredictions <- predict(LinearModel, newdata = test, type = "raw")
 
 lmRMSE <- sqrt(sum((lmPredictions-test_y)^2)/length(lmPredictions))
 lmRMSE
@@ -135,14 +129,14 @@ lmRMSE
 max(Capacity$LungCap)
 min(Capacity$LungCap)
 
-#Given that we have a range of over 14, an RMSE of slightly uner 1 is a strong performance for our linear model.
+#Given that we have a range of over 12, an RMSE of about 1 is a strong performance for our linear model.
 
 #####Random Forest: Training the model#####
-#Here we try to predict the same outcome on the same dataset using a random forest model.
+#Here we try to predict the same outcome on the same data set using a random forest model.
 #We will use the same train-test split established in the context of the linear model above.
 #We will attempt to optimize both node size and number of trees.  Given that we have only 5 predictors
 #we can try 1-10 node size  and 1-5 randomly selected predictors.
-#First we need to see how many trees we will need in order to stabilze prediction accuracy.
+#First we need to see how many trees we will need in order to stabilize prediction accuracy.
 set.seed(2)
 
 fit <- randomForest(LungCap~., data = Capacity)
@@ -185,7 +179,7 @@ View(results)
 
 which(min(results) == results)
 
-#Here we see that the minimum RMSE is the 72nd entry in the table, or row 12, column 3; minimum RMSE ~ 1.077
+#Here we see that the minimum RMSE is the 78th entry in the table, or row 18, column 3; minimum RMSE ~ 1.107
 
 #####Random Forest: Testing and evaluating the model#####
 #In the "results" table we have the columns identified by the number of randomly selected predictors
@@ -203,33 +197,5 @@ rfPredictions <- predict(testRF, test_x)
 rfRMSE <- sqrt(sum((rfPredictions-test_y)^2)/length(rfPredictions))
 rfRMSE
 
-#We see that the random forest RMSE of 1.002 is comparable to the linear model RMSE.
-
-varImp(testRF)
-
-#Notice that the feature importance almost exactly lines up with the predictor p-values in the linear model.
-#You can see this by running:
-
-summary(LinearModel)
-
-#again.
-#####Ensemble Prediction#####
-
-#These are good predictions, and give us confidence in our ability to predict lung capacity on an 
-#out-of-sample set, but we might be able to do better with an ensemble technique.  We do this by averaging
-#the predicted lung capacities between the linear model and the random forest.  This average then serves as 
-#our prediction.
-
-ensemblePredictions <- (rfPredictions + lmPredictions)/2
-ensembleRMSE <- sqrt(sum((ensemblePredictions-test_y)^2)/length(ensemblePredictions))
-ensembleRMSE
-
-(rfRMSE - ensembleRMSE)/(rfRMSE)
-
-(lmRMSE - ensembleRMSE)/(lmRMSE)
-
-#With an ensemble prediction, we decrease RMSE by about 1.6% over the random forest model and about 1.5% over
-#the linear model.
-#In the end, we can be confident that if the patterns in the data continue to hold, we can accurately predict
-#the lung capacity of individuals aged 3-19 years old.
+#We see that the random forest RMSE of 1.15 is not as good as the linear model RMSE.
 
