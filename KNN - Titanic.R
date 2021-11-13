@@ -126,12 +126,9 @@ set.seed(1)
 vec <- sample(c(1:nrow(titanicNorm)), (nrow(titanicNorm)/5),replace = FALSE)
 testNorm <- titanicNorm[vec,]
 trainNorm <- titanicNorm[-vec,]
-
-
-#We us 10-fold cross validation to find the optimal k value in terms of accuracy
 set.seed(2)
 control <- trainControl(method = "cv", number = 10, p = .9, classProbs = TRUE)
-train_knn <- train(Survived ~ ClassNorm + sex_binary + AgeNorm + SibNorm + ParentChildNorm + FareNorm, method = "knn",
+train_knn <- train(Survived ~ ., method = "knn",
                    data = trainNorm,
                    tuneGrid = data.frame(k = seq(1, 71, 2)),
                    trControl = control,
@@ -154,6 +151,7 @@ RobustAccuracy <- confusionMatrix(y_hat_knn, testNorm$Survived)$overall[["Accura
 RobustKappa <- confusionMatrix(y_hat_knn, testNorm$Survived)$overall[["Kappa"]]
 RobustAccuracy
 RobustKappa
+
 #####Max/Min Normalization#####
 #Now we create a model using a max/min normalization method that will scale each predictor down to some value between 0 and 1
 #Using this normalization method we need to be mindful of outliers.
@@ -169,6 +167,7 @@ hist(titanic$Fare, main = "Histogram of Fare", xlab = "Fare", ylab = "Count of P
 #the values before normalization.
 
 t <- titanic[which(titanic$Fare > 250),]
+t <- t %>% select(Survived, Pclass, sex_binary, Age, SibSp, Parch, Fare)
 t[order(t$Fare),]
 
 #Notice that there are no values between 263 and 512.  If we simply coerce the values of 512 down to 263 prior to normalization
@@ -184,15 +183,15 @@ for(i in 1:nrow(titanic))
 }
 #Given the smaller original ranges of the other predictors and the distribution of the age predictor we saw earlier, we 
 #can move forward with direct transformation of the rest of the data set.
-titanic$ClassNorm <- (titanic$Pclass - mean(titanic$Pclass))/(max(titanic$Pclass) - min(titanic$Pclass))
-titanic$AgeNorm <- (titanic$Age - mean(titanic$Age))/(max(titanic$Age) - min(titanic$Age))
-titanic$SibNorm <- (titanic$SibSp - mean(titanic$SibSp))/(max(titanic$SibSp) - min(titanic$SibSp))
-titanic$ParentChildNorm <- (titanic$Parch - mean(titanic$Parch))/(max(titanic$Parch) - min(titanic$SibSp))
-titanic$FareNorm <- (titanic$Fare - mean(titanic$Fare))/(max(titanic$Fare) - min(titanic$Fare))
-titanic$SexNorm <- (titanic$sex_binary - mean(titanic$Fare))/(max(titanic$sex_binary) - min(titanic$sex_binary))
+titanic$ClassNorm <- (titanic$Pclass - min(titanic$Pclass))/(max(titanic$Pclass) - min(titanic$Pclass))
+titanic$AgeNorm <- (titanic$Age - min(titanic$Age))/(max(titanic$Age) - min(titanic$Age))
+titanic$SibNorm <- (titanic$SibSp - min(titanic$SibSp))/(max(titanic$SibSp) - min(titanic$SibSp))
+titanic$ParentChildNorm <- (titanic$Parch - min(titanic$Parch))/(max(titanic$Parch) - min(titanic$Parch))
+titanic$FareNorm <- (titanic$Fare - min(titanic$Fare))/(max(titanic$Fare) - min(titanic$Fare))
+titanic$SexNorm <- (titanic$sex_binary - min(titanic$sex_binary))/(max(titanic$sex_binary) - min(titanic$sex_binary))
 
 
-titanicNorm <- titanic %>% select(Survived, ClassNorm, sex_binary, AgeNorm, SibNorm, ParentChildNorm, FareNorm)
+titanicNorm <- titanic %>% select(Survived, ClassNorm, SexNorm, AgeNorm, SibNorm, ParentChildNorm, FareNorm)
 for(i in 1:nrow(titanicNorm))
 {
   if(titanicNorm$Survived[i] == 1)
@@ -205,7 +204,7 @@ for(i in 1:nrow(titanicNorm))
   }
 }
 titanicNorm$Survived <- factor(titanicNorm$Survived)
-#Againt, we split our data into a training set and a hold out test set and use the training set for 
+#Again, we split our data into a training set and a hold out test set and use the training set for 
 #cross-validation to determine the optimal parameter k, then see how we do on the held out test set.
 
 
@@ -218,7 +217,7 @@ trainNorm <- titanicNorm[-vec,]
 #We us 10-fold cross validation to find the optimal k value in terms of accuracy
 set.seed(4)
 control <- trainControl(method = "cv", number = 10, p = .9, classProbs = TRUE)
-train_knn <- train(Survived ~ ClassNorm + sex_binary + AgeNorm + SibNorm + ParentChildNorm + FareNorm, method = "knn",
+train_knn <- train(Survived ~ ClassNorm + SexNorm + AgeNorm + SibNorm + ParentChildNorm + FareNorm, method = "knn",
                    data = trainNorm,
                    tuneGrid = data.frame(k = seq(1, 71, 2)),
                    trControl = control,
@@ -226,8 +225,8 @@ train_knn <- train(Survived ~ ClassNorm + sex_binary + AgeNorm + SibNorm + Paren
 
 ggplot(train_knn, highlight = TRUE)+
   xlab("k (Neighbors)")+
-  ylab("Accuracy")+
-  ggtitle("Accuracy via cross-training")
+  ylab("Kappa")+
+  ggtitle("Kappa - Max/Min Normalization")
 
 train_knn$bestTune
 #Interestingly we get a significantly different optimal k-value using max/min normalization.

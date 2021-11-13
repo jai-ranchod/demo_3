@@ -201,7 +201,7 @@ ggplot(model.data, aes(index, .std.resid)) +
 #significant predictor.  As such, we will use the z-statistic (and associated p-value) to determine feature selection.
 summary(model)
 #Here we notice that "LogFare" and "Parch" have relatively low magnitude z-statistics, indicating they may not be related to the
-#outcome.  We see that the step() function removes these features for our final model.
+#outcome.  We see that the step() function for step-wise feature selection removes these features for our final model.
 model <- step(model)
 summary(model)
 
