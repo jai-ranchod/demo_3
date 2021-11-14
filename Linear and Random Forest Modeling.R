@@ -109,7 +109,7 @@ test_y <- test$LungCap
 
 set.seed(3)
 control <- trainControl(method="cv", number = 5)
-LinearModel <- caret::train(LungCap ~., data = train, method = "lm", trControl = control)
+LinearModel <- train(LungCap ~., data = train, method = "lm", trControl = control)
 
 summary(LinearModel)
 
