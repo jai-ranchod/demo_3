@@ -145,22 +145,27 @@ str(abalone)
 
 head(abalone)
 #Here we see that the first thing we need to do is create a set of three dummy variables
-#for the "type" predictor.
+#for the "type" predictor which we will convert to factors 
 
 abalone <- abalone %>% mutate(Infant = 0, Male = 0, Female = 0)
 abalone$Infant[abalone$Type=="I"] <- 1
 abalone$Male[abalone$Type == "M"] <- 1
 abalone$Female[abalone$Type == "F"] <- 1
+abalone$Male <- factor(abalone$Male)
+abalone$Female <- factor(abalone$Female)
+abalone$Infant <- factor(abalone$Infant)
 
 a <- abalone %>% select(Rings, LongestShell, Diameter, Height, WholeWeight, ShuckedWeight, VisceraWeight, ShellWeight, Infant, Male, Female)
 #####Training the Model#####
 set.seed(1)
 fit <- randomForest(Rings~., data = a)
 plot(fit, main = "Trees Required to Stabilize Prediction Accuracy")
-
-#It looks like we'll need around 300 trees to stabilize prediction accuracy.
-#In this particular case we could probably go with as few as 200, but let's stick to 300 unless
-#it becomes computationally burdensome.
+nTree <- 200
+#It looks like we'll need around 200 trees to stabilize prediction accuracy.
+#As you run this, please recall that random forest model training is computationally intense.  With our
+#mtcars data set above, this was not an issue given the size of the data set.  Here, however, with a much
+#larger data set, the computation may take a while.  Feel free to use the results described below and
+#skip running this code if desired.
 
 set.seed(2)
 y <- a$Rings
@@ -175,28 +180,30 @@ train_y <- train$Rings
 test_x <- test[,-1]
 test_y <- test$Rings
 
+#Recall that we have 10 predictors, as such we will test with up to 40 nodes and mtry going up to 10
 set.seed(3)
 control <- trainControl(method="cv", number = 5)
 grid <- data.frame(mtry = c(1,2,3,4,5,6,7,8,9,10))
-nodeSize <- seq(1,30,1)
+nodeSize <- seq(1,40,1)
+nodeSizeLength <- (length(nodeSize))
 rfRMSE <- sapply(nodeSize, function(ns){
   rf <- train(train_x, train_y,
               method = "rf",
-              ntree = 300,
+              ntree = nTree,
               nodesize = ns,
               tuneGrid = grid,
               trControl = control)$results["RMSE"]
 })
 
 df <- c(0,0,0,0,0,0,0,0,0,0)
-for(i in 1:30)
+for(i in 1:nodeSizeLength)
 {
   df <- as.data.frame(rbind(df, rfRMSE[[i]]))
   
 }
 df <- df[-1,]
 
-for(i in 1:30)
+for(i in 1:nodeSizeLength)
 {
   rownames(df)[i] <- i
 }
@@ -215,15 +222,21 @@ colnames(results)[10] <- "Ten"
 View(results)
 
 which(min(results) == results)
+k <- which(min(results) == results)
 
-#Here we see that the lowest RMSE is ~2.132 and is found at entry number 136
-#which corresponds to mtry=5 and node size=16.
+optmtry <- ceiling(k/nodeSizeLength)
+optNodeSize <- nodeSizeLength-(optmtry*nodeSizeLength-k)
+
+optmtry
+optNodeSize
+#Here we see that the lowest RMSE is ~2.128 and is found at entry number 233
+#which corresponds to mtry=6 and node size=33.
 
 testRF <- train(train_x,
                 train_y,
-                nodesize = 16,
-                tuneGrid = data.frame(mtry = 5),
-                ntree = 300)
+                nodesize = optNodeSize,
+                tuneGrid = data.frame(mtry = optmtry),
+                ntree = 200)
 
 rfPredictions <- predict(testRF, test_x)
 
@@ -232,7 +245,7 @@ rfRMSE
 
 max(abalone$Rings)
 min(abalone$Rings)
-#We see that we have a test RMSE of ~2.134 for an outcome that ranges from
+#We see that we have a test RMSE of ~2.132 for an outcome that ranges from
 #1 to 29 with a density plot shown here:
 a %>% ggplot(aes(x = Rings))+
   geom_density(fill = "blue", alpha = 0.2)+
