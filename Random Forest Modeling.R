@@ -1,6 +1,8 @@
 #####Introducing Data#####
 if (!require("car")) install.packages("car")
 if (!require("dplyr")) install.packages("dplyr")
+if (!require("caret")) install.packages("caret")
+library(caret)
 library(dplyr)
 library(car)
 #Here we try to predict the gas mileage of various cars using the mtcars data set that is built into R
@@ -62,7 +64,7 @@ nodeSize <- seq(1,30,1)
 rfRMSE <- sapply(nodeSize, function(ns){
   rf <- train(train_x, train_y,
               method = "rf",
-              ntree = 200,
+              ntree = 300,
               nodesize = ns,
               tuneGrid = grid,
               trControl = control)$results["RMSE"]
@@ -127,7 +129,13 @@ rfRMSE
 
 
 #####Abalone Data#####
-install.packages("AppliedPredictiveModeling")
+if (!require("AppliedPredictiveModeling")) install.packages("AppliedPredictiveModeling")
+if (!require("randomForest")) install.packages("randomForest")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("caret")) install.packages("caret")
+library(caret)
+library(randomForest)
+library(dplyr)
 library(AppliedPredictiveModeling)
 data(abalone)
 str(abalone)
@@ -159,7 +167,7 @@ a <- abalone %>% select(Rings, LongestShell, Diameter, Height, WholeWeight, Shuc
 #####Training the Model#####
 set.seed(1)
 fit <- randomForest(Rings~., data = a)
-plot(fit, main = "Trees Required to Stabilize Prediction Accuracy")
+plot(fit, main = "Trees Required to Stabilize \n Prediction Accuracy")
 nTree <- 200
 #It looks like we'll need around 200 trees to stabilize prediction accuracy.
 #As you run this, please recall that random forest model training is computationally intense.  With our
@@ -180,12 +188,24 @@ train_y <- train$Rings
 test_x <- test[,-1]
 test_y <- test$Rings
 
-#Recall that we have 10 predictors, as such we will test with up to 40 nodes and mtry going up to 10
+#According to Boehmke and Greenwell
+#(https://bradleyboehmke.github.io/HOML/random-forest.html)
+#A typical mtry default value for regression is p/3.  We have p=10, which would set our default at 3.33
+#just to be sure, we can 'scan' values 1:10
+#Similarly, R documentation
+#(https://www.rdocumentation.org/packages/randomForest/versions/4.6-14/topics/randomForest)
+#sets the default nodeSize value for regression at 5, so we 'scan' 1:10 just to be sure
+#Now that we've got our nodeSiz range, mtry range, and ntree parameters all set up, we can begin training
+#As an aside, even though we've justified reasonable parameter usage here, random forests do take some
+#time to train.  Results will be commented below; feel free to read through the rest of this file and run
+#the code later to confirm results.
+
 set.seed(3)
 control <- trainControl(method="cv", number = 5)
 grid <- data.frame(mtry = c(1,2,3,4,5,6,7,8,9,10))
-nodeSize <- seq(1,40,1)
+nodeSize <- seq(1,10,1)
 nodeSizeLength <- (length(nodeSize))
+x <- 0
 rfRMSE <- sapply(nodeSize, function(ns){
   rf <- train(train_x, train_y,
               method = "rf",
@@ -193,6 +213,7 @@ rfRMSE <- sapply(nodeSize, function(ns){
               nodesize = ns,
               tuneGrid = grid,
               trControl = control)$results["RMSE"]
+              
 })
 
 df <- c(0,0,0,0,0,0,0,0,0,0)
@@ -221,7 +242,6 @@ colnames(results)[9] <- "Nine"
 colnames(results)[10] <- "Ten"
 View(results)
 
-which(min(results) == results)
 k <- which(min(results) == results)
 
 optmtry <- ceiling(k/nodeSizeLength)
@@ -229,14 +249,15 @@ optNodeSize <- nodeSizeLength-(optmtry*nodeSizeLength-k)
 
 optmtry
 optNodeSize
-#Here we see that the lowest RMSE is ~2.128 and is found at entry number 233
-#which corresponds to mtry=6 and node size=33.
+results[optNodeSize, optmtry]
+#Here we see that the lowest RMSE is ~2.143 and is found at mtry = 3 and nodeSize = 8.
+#Now we can see how our model does against the held out test set.
 
 testRF <- train(train_x,
                 train_y,
                 nodesize = optNodeSize,
                 tuneGrid = data.frame(mtry = optmtry),
-                ntree = 200)
+                ntree = nTree)
 
 rfPredictions <- predict(testRF, test_x)
 
@@ -245,7 +266,7 @@ rfRMSE
 
 max(abalone$Rings)
 min(abalone$Rings)
-#We see that we have a test RMSE of ~2.132 for an outcome that ranges from
+#We see that we have a test RMSE of ~2.134 for an outcome that ranges from
 #1 to 29 with a density plot shown here:
 a %>% ggplot(aes(x = Rings))+
   geom_density(fill = "blue", alpha = 0.2)+
