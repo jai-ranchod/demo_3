@@ -24,7 +24,7 @@ library(tidyr)
 library(pedometrics)
 #First we process the titanic_train data set to make it a little more logistic regression friendly
 titanic <-  titanic_train %>%
-  select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare) %>%
+  dplyr::select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare) %>%
   mutate(Survived = factor(Survived),
          Pclass = factor(Pclass),
          Sex = factor(Sex))
