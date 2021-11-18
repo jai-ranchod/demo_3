@@ -26,10 +26,12 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(pedometrics)
-#First we process the titanic_train data set to make it a little more logistic regression friendly
+#First we process the titanic_train data set
 titanic <-  titanic_train %>%
   select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare)
-
+#We keep the rows that we have reason to believe may inform the survival status of the passenger.  This means excluding
+#cabin, port of embarkment, ticket number, and name.  Cabin and port of embarkment could feasibly carry some information about 
+#the socio-economic standing of the passenger, but certainly not more than is held in the fare or class predictors.
 #We'll remove NA rows as there aren't very many
 titanic <- na.omit(titanic)
 #making the sex column binary with male = 1

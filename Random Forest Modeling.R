@@ -118,7 +118,7 @@ rfPredictions <- predict(testRF, test_x)
 rfRMSE <- sqrt(sum((rfPredictions-test_y)^2)/length(rfPredictions))
 rfRMSE
 #Here we find the test RMSE to be ~2.43.  Recall that in the linear model our test RMSE was
-#~3.21, indicating we have achieved a significantly better result using a random forest model.
+#~2.93, indicating we have achieved a significantly better result using a random forest model.
 
 
 
