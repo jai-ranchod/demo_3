@@ -35,7 +35,6 @@ str(mtcars)
 #####Exploratory Analysis#####
 #First, let's create a correlation matrix to get a visual representation of the relationships between
 #predictors and the outcome.
-mtcars <- mtcars[order(mtcars$mpg),]
 Matrix <- cor(mtcars)
 corrplot(Matrix, method = "color", order = "FPC")
 #Our first correlation matrix is ordered by first principle component.  For the next matrix, we'll order by
@@ -71,7 +70,7 @@ df <- mtcars
 df$am <- factor(df$am)
 df$vs <- factor(df$vs)
 
-#Next, we need to splot our data set into a training set and a test set.  We train the model on the training set, then
+#Next, we need to plot our data set into a training set and a test set.  We train the model on the training set, then
 #evaluate our performance against the test set.
 set.seed(1)
 y <- df$mpg
@@ -147,7 +146,7 @@ summary(carsModel)
 #####Model Diagnostics#####
 finalModel <- lm(mpg~hp+wt+factor(am), data = mtcars)
 par(mfrow = c(2,2))
-plot(finalModel, labels.id = FALSE)
+plot(model, labels.id = FALSE)
 par(mfrow = c(1,1))
 #Our residuals plot indicates no specific pattern linking residuals to fitte values, implying that our assumptions of 
 #homoscedasticity and linearity are intact.  Our qq plot similarly indicates that we can rely on our assumption of 

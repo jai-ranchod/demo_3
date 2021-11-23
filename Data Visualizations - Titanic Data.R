@@ -103,14 +103,15 @@ titanic %>%
 #We can pull together data on sex, survival rate, and passenger class by generating multiple plots simultaneously.
 
 titanic %>% filter(!(is.na(Age))) %>%
-  ggplot(aes(x = Age, y = ..count.., fill = Survived)) +
+  ggplot(aes(x = Age,y = ..count.., fill = Survived)) +
   geom_density(alpha = 0.2) +
   scale_fill_discrete(name = "Survival Status", labels = c("Did Not Survive", "Survived"))+
   xlab("Age")+
-  ylab("Proportion of Age Group")+
+  ylab("Count Adjusted Proportion of Age Group/Passenger Class")+
+  ggtitle("Sex and Passenger Class Survival")+
   facet_grid(Pclass ~ Sex)
 #Note that we show first class in the top row, second class in the middle row, and third class in the bottom row.  We show females on the left and
 #males on the right.  These visualizations show that first and second class females are significantly more likely to survive than die.  Third class females are
-#about equally likely to survive ro die, with the older age group being more likely to die.  Second and third
+#about equally likely to survive or die, with the older age group being more likely to die.  Second and third
 #class males are much more likely to die than survive, with the exception of very young second class males.
 
