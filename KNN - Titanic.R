@@ -336,7 +336,7 @@ ggplot(train_knn2, highlight = TRUE)+
   ggtitle("Kappa - Max/Min Normalization")
 
 train_knn2$bestTune
-#The model with all of the predictors shows k=3, as does this one.
+#The model with all of the predictors shows k=3, and this one is similar with k=5.
 
 knn_maxmin_fit2 <- knn3(Survived ~ ., data = trainNorm2, k = train_knn2$bestTune$k)
 y_hat_knn2 <- predict(knn_maxmin_fit2, newdata = testNorm2, type = "class")
