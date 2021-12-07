@@ -6,6 +6,7 @@ if (!require("car")) install.packages("car")
 if (!require("caret")) install.packages("caret")
 if (!require("pedometrics")) install.packages("pedometrics")
 if (!require("tidyr")) install.packages("tidyr")
+if (!require("MASS")) install.packages("MASS")
 
 
 library(AppliedPredictiveModeling)
@@ -15,6 +16,7 @@ library(car)
 library(caret)
 library(pedometrics)
 library(tidyr)
+library(MASS)
 data(abalone)
 str(abalone)
 #Abalone is a type of mollusk found throughout the world.  In this data set, we use
@@ -38,9 +40,11 @@ abalone$Infant[abalone$Type=="I"] <- 1
 abalone$Male[abalone$Type == "M"] <- 1
 abalone$Female[abalone$Type == "F"] <- 1
 
-abalone <- abalone %>% select(Rings, LongestShell, Diameter, Height, WholeWeight, ShuckedWeight, VisceraWeight, ShellWeight, Infant, Male, Female)
+abalone <- abalone %>% dplyr::select(Rings, LongestShell, Diameter, Height, WholeWeight, ShuckedWeight, VisceraWeight, ShellWeight, Infant, Male, Female)
 
 #####Exploratory Analysis#####
+par(mfrow = c(1,1))
+
 Matrix <- cor(abalone)
 corrplot(Matrix, method = "color", order = "FPC")
 #Our first correlation matrix is ordered by first principle component.
@@ -171,13 +175,15 @@ par(mfrow = c(1,1))
 #at the top.  This indicates that we cannot rely on our assumption of normality.  So what are the consequences of the 
 #assumption of normality failing?
 
-#1. We cannot make reliable confidence intervals in the prediction of any future out of sample data points.
-#2. Our coefficient estimates may have been skewed.  Linear model coefficients are calculated based on squared error,
-#so it may not take many outliers to significantly alter model coefficients.  We can see the presence of outliers/leverage points in our
-#diagnostic plots.
+#According to 
+#Statistics Solutions. (2013). Normality.
+#Retrieved from https://www.statisticssolutions.com/academic-solutions/resources/directory-of-statistical-analyses/normality/
 
-#We have a few options.  First, we can try a transformation of the outcome.  A natural log transformation is a common option.
+#we need not worry too much.  Given the size of our data set, we can be assured that via the central limit theorem
+#that the distribution of residuals will approximate normality.  We can see this in action by bootstrapping a larger data set later on.
+#First, however, we should try another common technique for dealing with this situation; data transformation.
 
+#####Transforming Outcomes#####
 set.seed(2)
 y <- abalone$Rings
 testIndex2 <- createDataPartition(y, times = 1, p = 0.2, list = FALSE)
@@ -215,7 +221,20 @@ par(mfrow = c(1,1))
 
 
 #####Building Bootstrap Model#####
-set.seed(2)
+#First, let's re-build the data set for clarity.
+
+data(abalone)
+abalone <- abalone %>% mutate(Infant = 0, Male = 0, Female = 0)
+abalone$Infant[abalone$Type=="I"] <- 1
+abalone$Male[abalone$Type == "M"] <- 1
+abalone$Female[abalone$Type == "F"] <- 1
+
+abalone <- abalone %>% dplyr::select(Rings, LongestShell, Diameter, Height, WholeWeight, ShuckedWeight, VisceraWeight, ShellWeight, Infant, Male, Female)
+
+
+
+
+
 B <- 10000
 R <- c()
 LS <- c()
@@ -241,6 +260,8 @@ Male_Bootstrap <- c()
 Female_Bootstrap <- c()
 
 L <- c()
+set.seed(3)
+
 for(i in 1:B)
 {
   for(j in 1:nrow(abalone))
@@ -270,12 +291,17 @@ for(i in 1:B)
   Female_Bootstrap[i] <- mean(Fe)
   Male_Bootstrap[i] <- mean(M)
 }
+Bootstrap <- as.data.frame(cbind(Rings_Bootstrap, LongestShell_Bootstrap, Diameter_Bootstrap, Height_Bootstrap, WholeWeight_Bootstrap, ShuckedWeight_Bootstrap, VisceraWeight_Bootstrap, ShellWeight_Bootstrap, Female_Bootstrap, Infant_Bootstrap, Male_Bootstrap))
+
+#Notice that we are creating one specific bootstrapped data set to simulate a larger population that our initial 
+#sample came from.  This is *not* bootstrap aggregation ("bagging") which entails estimating model coefficients via 
+#re-sampling.
 
 #####Feature Selection - Bootstrap Model#####
 #We'll jump straight into feature selection given that we've already performed our exploratory analysis
 #and we would not expect to gain any new information.
 #First we break the data into a training set and a test set again.
-set.seed(3)
+set.seed(4)
 y <- Bootstrap$Rings_Bootstrap
 testIndex <- createDataPartition(y, times = 1, p = 0.2, list = FALSE)
 
@@ -288,13 +314,14 @@ vif(Bootstrap1)
 #We see that we have an aliased predictor, just as before.
 alias(Bootstrap1)
 #The fact that it is the "Male" predictor is not terribly surprising, this is likely just due to how the predictors
-#are arranged in the data frame, otherwise we would have seen the "Female" predictor be the aliased one again.
+#are arranged in the data frame, otherwise we would have seen the "Female" or "Infant" predictor be the aliased one given that the are
+#set up to be mutually exclusive.
 Bootstrap2 <- lm(Rings_Bootstrap~Diameter_Bootstrap+Height_Bootstrap+VisceraWeight_Bootstrap+WholeWeight_Bootstrap+ShuckedWeight_Bootstrap+ShellWeight_Bootstrap+LongestShell_Bootstrap+Infant_Bootstrap+Female_Bootstrap, data = Bootstrap)
 vif(Bootstrap2)
 #Notice that again we have several predictors above the default R threshold of 10.  We will return to this issue shortly.
 Bootstrap3 <- stepAIC(Bootstrap2, direction = "both", trace = FALSE)
 summary(Bootstrap3)
-#Now let's check for collinearity again using the vif() function.
+#Now let's check for colinearity again using the vif() function.
 vif(Bootstrap3)
 #We see several VIF values greater than the default R threshold of 10, so we should apply the stepVIF() function
 #as a further measure of feature selection.
@@ -318,13 +345,13 @@ lmRMSE <- sqrt(sum((test$Predicted-test$Rings_Bootstrap)^2)/length(lmPredictions
 lmRMSE
 #Notice the RMSE is significantly lower than before.  Strictly speaking, this model is predicting the average
 #number of rings on a sample of 4,177 abalone given the average characteristics of that set.  As such we expect the 
-#test RMSE to be significantly smaller that our above model.
+#test RMSE to be significantly smaller that our initial model.
 #This approach does still let us interpret the predictors of the model, however, and is much more likely to
 #stand up to an inspection of the assumptions of linear modeling.
 
 #####Model Interpretation - Bootstrap Model#####
 summary(Bootstrap5)
-#Although we are using a bootstrapped data set, notice that we are still only explaining about 42% of the 
+#Although we are using a bootstrapped data set, notice that we are still only explaining about 41% of the 
 #variation in number of rings with our model.
 
 
@@ -332,6 +359,13 @@ summary(Bootstrap5)
 #indicating that the number of rings increases as shell weight and height increase.  We notice that diameter again has a
 #negative influence on our predicted number of rings.  Finally, we see that infants are likely to have a smaller
 #number of rings, which we expect.
+
+#This analysis is best used for inference given the fact that we got a higher test RMSE with a linear model than with our
+#non-parametrics model (random forest, see the "Random Forest" file in this repository).  We also notice the compartively small
+#R-squared value when indicating that this analysis should only be used for cautious inference.  The truth is that linear modeling 
+#does not always prove to be an appropriate fit for a given problem, which is why the ability to employe multiple techniques is
+#important.
+
 
 #####Model Diagnostics - Bootstrap#####
 finalModelBootstrap <- lm(Rings_Bootstrap~Diameter_Bootstrap+Height_Bootstrap+ShellWeight_Bootstrap+Infant_Bootstrap, data = Bootstrap)
