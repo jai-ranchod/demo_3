@@ -26,17 +26,23 @@ This script uses a data set from Yahoo Finance that will be referenced directly 
 KNN - Titanic:
 This script uses the "titanic_train" data set to illustrate the use of the k-nearest neighbors algorithm to create a binary classifier on the survival status of passengers from the infamous Titanic Oceanliner tragedy.
 
+LASSO Regression:
+Here we use the LASSO regularization technique as applied to a linear model predicting the salaries of baseball players using statistics from the 1986 and 1987 seasons.
+
 Linear modeling - Cars: 
 
 This script uses the "mtcars" data set to illustrate the creation of a linear regression model.  We also analyze the primary assumptions of linear modeling.
 
 Logistic Regression: 
 
-In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.  Cubic splines are considered but ultimately not included after cross-validation determines they are not helpful to the model.
+In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.
 
 Principal Component Analysis:
 
 In this script, I use the built-in "mtcars" data set to demonstrate principal component analysis as an exploratory analysis technique.
+
+Random Forest modeling:
+This script contains two random forest models.  One applies to the "mtcars" data set so as to draw a parallel to the linear modeling script.  The other explores the more complex "abalone" data set held in R.
 
 Statistical Analysis - Cancer Statistics: 
 
