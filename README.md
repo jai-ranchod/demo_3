@@ -1,5 +1,5 @@
 # Repository Overview
-This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R (and SQLite) programming language(s).
+This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R, SQLite, and Python programming languages.
 
 You can download R here from the Case Western Reserve University mirror here:
 https://cran.case.edu/
@@ -9,11 +9,11 @@ https://www.rstudio.com/products/rstudio/download/
 
 Both are free.
 
-The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository:
+The data sets referenced are all built into R.
 
-https://github.com/jai-ranchod/demo_2
+Birthday Paradox:
 
-as a backup.  All scripts are self-contained, so it is not necessary to download these files, but you are free to do so if you would like.
+This files explores the "Birthday Paradox" which states that the probability of having two or more people in the same room with the same birthday exceeds 50% with only 23 people in the room.
 
 Data Visualizations - Titanic Data: 
 
