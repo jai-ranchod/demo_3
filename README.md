@@ -23,9 +23,12 @@ Exponential Forecasting:
  
 This script uses a data set from Yahoo Finance that will be referenced directly within the script; no alterations will be necessary.  I use an optimized Holt model to forecast the value of the PHLX semiconductor index 21 business days (one month) out.
 
-Linear and Random Forest Modeling: 
+KNN - Titanic:
+This script uses the "titanic_train" data set to illustrate the use of the k-nearest neighbors algorithm to create a binary classifier on the survival status of passengers from the infamous Titanic Oceanliner tragedy.
 
-This script uses a data set from the Marin Stats program to predict lung capacity in adolescents and teens.  The continuous lung capacity outcome is predicted with a linear model, with a random forest model, and finally with an ensemble of both.  The data set is refenced directly within the script, no alterations are necessary.
+Linear modeling - Cars: 
+
+This script uses the "mtcars" data set to illustrate the creation of a linear regression model.  We also analyze the primary assumptions of linear modeling.
 
 Logistic Regression: 
 
