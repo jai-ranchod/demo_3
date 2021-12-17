@@ -1,5 +1,5 @@
 # Repository Overview
-This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R, SQLite, and Python programming languages.
+This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R, SQL, and Python programming languages.
 
 You can download R here from the Case Western Reserve University mirror here:
 https://cran.case.edu/
