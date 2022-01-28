@@ -38,7 +38,7 @@ str(mtcars)
 Matrix <- cor(mtcars)
 corrplot(Matrix, method = "color", order = "FPC")
 #Our first correlation matrix is ordered by first principle component.  For the next matrix, we'll order by
-#angular order of eigenvectors or "AOE".
+#angular order of eigen vectors or "AOE".
 corrplot(Matrix, method = "color", order = "AOE")
 
 #Finally, we'll use the default values so you can get a closer look at individual predictor/outcome relationships
