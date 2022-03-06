@@ -14,6 +14,8 @@ if (!require("dplyr")) install.packages("dplyr")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("tidyr")) install.packages("tidyr")
 if (!require("pedometrics")) install.packages("pedometrics")
+if (!require("car")) install.packages("car")
+
 
 library(titanic)
 library(splines)
@@ -22,20 +24,14 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(pedometrics)
+library(car)
 #First we process the titanic_train data set to make it a little more logistic regression friendly
 titanic <-  titanic_train %>%
   dplyr::select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare) %>%
   mutate(Survived = factor(Survived),
          Pclass = factor(Pclass),
          Sex = factor(Sex))
-
-
-#titanic_train %>%
- # select(Survived, Pclass, Sex, Age, SibSp, Parch, Fare)
-
-#We'll remove NA rows as there aren't very many
 titanic <- na.omit(titanic)
-#making the sex column binary with male = 1
 titanic$sex_binary <- as.integer(titanic$Sex == "male")
 titanic$sex_binary <- factor(titanic$sex_binary)
 
