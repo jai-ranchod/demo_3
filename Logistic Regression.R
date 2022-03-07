@@ -1,4 +1,3 @@
-
 #####Loading Libraries and Introducing Data#####
 #Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the infamous titanic wreck
 #of 1912.  We use the built in "titanic_train" data set to train a logistic regression model which we then test against
@@ -410,8 +409,6 @@ df <- df[order(df$t),]
 df[which(df$sens*df$spec == max(df$sens*df$spec)),]
 
 #####The End#####
-
-
 
 
 
