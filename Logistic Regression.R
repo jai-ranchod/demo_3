@@ -1,10 +1,11 @@
+
 #####Loading Libraries and Introducing Data#####
 #Here we use a logistic regression model as a means of binary classification to predict who will survive and who will not survive the infamous titanic wreck
 #of 1912.  We use the built in "titanic_train" data set to train a logistic regression model which we then test against
 #a held out test subset of the "titanic_train" data set.
 
 #We plainly have a binary outcome, we can reasonably assume there is independence among the observations, and a brief examination
-#of the data will clearly show that we have enough data points to puruse a logistic regression model.
+#of the data will clearly show that we have enough data points to pursue a logistic regression model.
 
 if (!require("titanic")) install.packages("titanic")
 if (!require("splines")) install.packages("splines")
@@ -31,7 +32,127 @@ titanic <-  titanic_train %>%
   mutate(Survived = factor(Survived),
          Pclass = factor(Pclass),
          Sex = factor(Sex))
+#####Dealing with NA values#####
+
+#Next we need to deal with NA values.  If there is a pattern in regards to the rows holding NA values, we can 
+#try to impute values, otherwise we may need to remove the rows.
+mean(is.na(titanic$Age))
+#Here we see that we have about 19% of our data where age is NA.  Here we try to reduce that in a logical way; without sacrificing data integrity.
+
+
+t <- titanic[which(is.na(titanic$Age) == TRUE),]
+hist(t$Fare)
+hist(as.numeric(t$Survived)-1)
+hist(as.numeric(t$Pclass))
+hist(as.numeric(t$Sex == 'male'))
+hist(t$SibSp)
+hist(t$Parch)
+#We notice that those for whom the age field is NA seem to be men who did not survive, 3rd class, have no siblings or spouses on board,
+#paid less than 50 pounds in fare, and had no parents or children.
+#Therefore, we can take the mean age of everyone with Age NOT NA and impute it to those in that cross section for whom Age IS NA.
+
+s <- titanic[(titanic$Sex == 'male' & titanic$Fare < 50 & titanic$Survived == 0 & titanic$Pclass == 3 & titanic$SibSp == 0 & titanic$Parch == 0 & is.na(titanic$Age) == FALSE),]
+AgeNewOne <- s %>% pull(Age) %>% mean()
+
+for (i in 1:nrow(titanic))
+{
+  if(titanic$Sex[i] == 'male' & titanic$Fare[i] < 50 & titanic$Survived[i] == 0 & titanic$Pclass[i] == 3 & titanic$SibSp[i] == 0 & titanic$Parch[i] == 0 & is.na(titanic$Age[i]) == TRUE)
+  {
+    titanic$Age[i] <- AgeNewOne
+  }
+}
+#After our initial imputation, let's see if there are any strong trends remaining for us to leverage.
+
+
+t <- titanic[which(is.na(titanic$Age) == TRUE),]
+hist(t$Fare)
+hist(as.numeric(t$Survived)-1)
+hist(as.numeric(t$Pclass))
+hist(as.numeric(t$Sex == 'male'))
+hist(t$SibSp)
+hist(t$Parch)
+
+s <- titanic[(titanic$Fare < 50 & titanic$Pclass == 3 & titanic$SibSp == 0 & titanic$Parch == 0 & is.na(titanic$Age) == FALSE),]
+AgeNewTwo <- s %>% pull(Age) %>% mean()
+
+#We see that those with Age = 'NA' still generally paid less than 50 pounds in fare, were generally 3rd class, had no siblings or
+#spouses on board, and had no parents or children on board.  Again, let's find the mean of the age for passengers in this new cross section that
+#do NOT have Age = 'NA'.
+
+for (i in 1:nrow(titanic))
+{
+  if(titanic$Fare[i] < 50 & titanic$Pclass[i] == 3 & titanic$SibSp[i] == 0 & titanic$Parch[i] == 0 & is.na(titanic$Age[i]) == TRUE)
+  {
+    titanic$Age[i] <- AgeNewTwo
+  }
+}
+
+mean(is.na(titanic$Age))
+
+#Here we see that we have reduced the percentage of data where age is NA down to about 9%.  This is much better.  Let's see if there are still any patterns for us to 
+#exploit.
+
+t <- titanic[which(is.na(titanic$Age) == TRUE),]
+hist(t$Fare)
+hist(as.numeric(t$Survived)-1)
+hist(as.numeric(t$Pclass))
+hist(as.numeric(t$Sex == 'male'))
+hist(t$SibSp)
+hist(t$Parch)
+#We see that Fare, SibSp, and Parch still offer us a distinct cross section to work with.  Let's take those and find a new 
+#average to impute as we did before.
+
+s <- titanic[(titanic$Fare < 100 & titanic$SibSp == 0 & titanic$Parch == 0 & is.na(titanic$Age) == FALSE),]
+AgeNewThree <- s %>% pull(Age) %>% mean()
+
+for (i in 1:nrow(titanic))
+{
+  if(titanic$Fare[i] < 100 & titanic$SibSp[i] == 0 & titanic$Parch[i] == 0 & is.na(titanic$Age[i]) == TRUE)
+  {
+    titanic$Age[i] <- AgeNewThree
+  }
+}
+
+t <- titanic[which(is.na(titanic$Age) == TRUE),]
+hist(t$Fare)
+hist(as.numeric(t$Survived)-1)
+hist(as.numeric(t$Pclass))
+hist(as.numeric(t$Sex == 'male'))
+hist(t$SibSp)
+hist(t$Parch)
+#It looks like we can still argue that most of these passengers have no siblings or spouses on board and paid less than 100 pounds
+#in fare.
+
+s <- titanic[(titanic$Fare < 100 & titanic$SibSp == 0 & is.na(titanic$Age) == FALSE),]
+
+AgeNewFour <- s %>% pull(Age) %>% mean()
+
+for (i in 1:nrow(titanic))
+{
+  if(titanic$Fare[i] < 100 & titanic$SibSp[i] == 0 & is.na(titanic$Age[i]) == TRUE)
+  {
+    titanic$Age[i] <- AgeNewFour
+  }
+}
+
+t <- titanic[which(is.na(titanic$Age) == TRUE),]
+hist(t$Fare)
+hist(as.numeric(t$Survived)-1)
+hist(as.numeric(t$Pclass))
+hist(as.numeric(t$Sex == 'male'))
+hist(t$SibSp)
+hist(t$Parch)
+#At this point, given the small scale of the remaining population of passengers with Age = 'NA', it is difficult to 
+#establish any clear pattern to use for imputation of data.  Therefore, we omit the rest of the NA values as they 
+#are no appearing at random.
+
+
+
 titanic <- na.omit(titanic)
+
+
+#####Explaining Data#####
+#Let's now convert the 'sex' predictor to a factor and provide formal definitions for our data
 titanic$sex_binary <- as.integer(titanic$Sex == "male")
 titanic$sex_binary <- factor(titanic$sex_binary)
 
@@ -45,7 +166,7 @@ titanic$sex_binary <- factor(titanic$sex_binary)
 #sex_binary - a different expression of Sex
 
 
-#Breaking down data into train and test split
+######Breaking down data into train and test split#####
 #Note that we are only using the "titanic_train" set here, not utilizing the "titanic_test" set at all.
 #This is because the "titanic_test" set does not have a column indicating survival status, and we want to 
 #apply our final model to a holdout test set to see how it performs.
@@ -75,7 +196,7 @@ meds <- c(median(l[l<q[2]]),
           median(l[l>=q[5]]))
 
 plot(meds, logits)
-#It doesnt look like we meet the assumption of linearity of for the "Fare" predictor, but it looks like
+#It doesn't look like we meet the assumption of linearity of for the "Fare" predictor, but it looks like
 #a logarithmic transformation of the "Fare" predictor might do the trick.
 l <- log(train$Fare)
 q <- quantile(l, probs = c(0,0.2,0.4,0.6,0.8,1))
@@ -137,26 +258,35 @@ meds <- c(median(l[l<q[2]]),
 plot(meds, logits)
 meds
 #This relationship is definitely not linear and it does not appear that there is an easy way to transform
-#the "Age" predictor to make the linearity/logit assumption work out.  We do notice, however, that the logits
-#do tend to fall into 3 distinct categories; those for ages below 20, those for ages between 20 and 31.5, and 
-#those for ages above 31.5. (15 deteremined via average of meds[1], meds[2]; 31.5 determined via average of meds[3], meds[4])
-#We can make categorical variables for our data set accordingly using the "age" predictor.
-train$AgeLow <- as.numeric(train$Age < 15)
+#the "Age" predictor to make the linearity/logit assumption work out. Let's look at a histogram and see if there is 
+#another way to identify a useful pattern.
+hist(titanic$Age, breaks = 50)
+
+
+
+#We do notice, however, that the histogram appears to show natural breaks in the distribution of ages around 
+#the particularly elderly and the particularly young.  This aligns with our historical knowledge of how positions on 
+#life boats were prioritized. A reasonable estimate of cutoffs appears to be 18.5 and 63.5, with the rest of the population in 
+#middle.
+youngbreak <- 18.5
+elderbreak <- 63.5
+
+train$AgeLow <- as.numeric(train$Age < youngbreak)
 train$AgeLow <- factor(train$AgeLow)
 
-train$AgeMid <- as.numeric(train$Age >= 15 & train$Age < 31.5)
+train$AgeMid <- as.numeric(train$Age >= youngbreak & train$Age < elderbreak)
 train$AgeMid <- factor(train$AgeMid)
 
-train$AgeHigh <- as.numeric(train$Age >= 31.5)
+train$AgeHigh <- as.numeric(train$Age >= elderbreak)
 train$AgeHigh <- factor(train$AgeHigh)
 
-test$AgeLow <- as.numeric(test$Age < 15)
+test$AgeLow <- as.numeric(test$Age < youngbreak)
 test$AgeLow <- factor(test$AgeLow)
 
-test$AgeMid <- as.numeric(test$Age >= 15 & test$Age < 31.5)
+test$AgeMid <- as.numeric(test$Age >= youngbreak & test$Age < elderbreak)
 test$AgeMid <- factor(test$AgeMid)
 
-test$AgeHigh <- as.numeric(test$Age >= 31.5)
+test$AgeHigh <- as.numeric(test$Age >= elderbreak)
 test$AgeHigh <- factor(test$AgeHigh)
 
 train <- train %>% select(Survived, Pclass, SibSp, Parch, LogFare, sex_binary, AgeLow, AgeMid, AgeHigh)
@@ -207,17 +337,20 @@ summary(model)
 #the best model will not have that spline; both using cross validation.  Now we take the model that we built from the training
 #set accesssed in the first section and use it to make a prediction on the test set we held out in the beginning.
 test <- test %>% mutate(predicted_percent_survival = predict(model, newdata = test, type = "response"))
-test$predicted_percent_survival <- round(test$predicted_percent_survival)
+test$predicted_percent_survival <- round(test$predicted_percent_survival) #Note that this assumes a cutoff of 0.5, which we will NOT assume below.
 test$Survived <- as.numeric(test$Survived)
 test$Survived <- (test$Survived-1)
 sensitivity_final <- test %>% filter(Survived == 1) %>% summarise(sensitivity = sum(predicted_percent_survival)/dplyr::n())
 specificity_final <- test %>% filter(Survived == 0) %>% summarise(specificity = (dplyr::n() - sum(predicted_percent_survival))/dplyr::n())
+
 sensitivity_final
-#0.7454545
+
 specificity_final
-#0.8941176
+
+sensitivity_final*specificity_final
+
 #We have now completed a successful logistic regression modeling of survival on the titanic.  
-#We have checked all of the necessary assumptions associated with logistic regression and adpated our data accordingly.
+#We have checked all of the necessary assumptions associated with logistic regression and adapted our data accordingly.
 #We then selected our feature set using the z-statistic.
 #Finally, we tested our model against our hold out test set to determine that our model works quite well.
 #####Further Model Evaluation#####
@@ -269,13 +402,24 @@ for(i in 1:nrow(df)-1)
 }
 AUC <- sum(s)
 AUC
-#0.8731551
 #We note that we have done quite well in terms of AUC.
 
-#Interestingly, we also note that the threshold yielding the optimal result here is anywhere between
-#0.459 and 0.479 as opposed to the Bayesian classifier threshold of 0.5.
+#Interestingly, we also note that the threshold yielding the optimal result here is significantly below the traditional
+#threshold of 0.5 which we used above to calculate the sensitivity and specificity.
 df <- df[order(df$t),]
 df[which(df$sens*df$spec == max(df$sens*df$spec)),]
+
+#####The End#####
+
+
+
+
+
+
+
+
+
+
 
 
 
