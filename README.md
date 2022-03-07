@@ -1,5 +1,5 @@
 # Repository Overview
-This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R (and SQLite) programming language(s).
+This github repository is designed to give demonstrations of my expertise in a variety of data science and data analysis contexts using the R, SQL, and Python programming languages.
 
 You can download R here from the Case Western Reserve University mirror here:
 https://cran.case.edu/
@@ -9,11 +9,11 @@ https://www.rstudio.com/products/rstudio/download/
 
 Both are free.
 
-The data sets referenced are either built into R or referenced in a self-contained way within the script.  Data sets that are not directly built into R are also held in this repository:
+The data sets referenced are all built into R.
 
-https://github.com/jai-ranchod/demo_2
+Birthday Paradox:
 
-as a backup.  All scripts are self-contained, so it is not necessary to download these files, but you are free to do so if you would like.
+This files explores the "Birthday Paradox" which states that the probability of having two or more people in the same room with the same birthday exceeds 50% with only 23 people in the room.
 
 Data Visualizations - Titanic Data: 
 
@@ -23,23 +23,33 @@ Exponential Forecasting:
  
 This script uses a data set from Yahoo Finance that will be referenced directly within the script; no alterations will be necessary.  I use an optimized Holt model to forecast the value of the PHLX semiconductor index 21 business days (one month) out.
 
-Linear and Random Forest Modeling: 
+KNN - Titanic:
+This script uses the "titanic_train" data set to illustrate the use of the k-nearest neighbors algorithm to create a binary classifier on the survival status of passengers from the infamous Titanic Oceanliner tragedy.
 
-This script uses a data set from the Marin Stats program to predict lung capacity in adolescents and teens.  The continuous lung capacity outcome is predicted with a linear model, with a random forest model, and finally with an ensemble of both.  The data set is refenced directly within the script, no alterations are necessary.
+LASSO Regression:
+Here we use the LASSO regularization technique as applied to a linear model predicting the salaries of baseball players using statistics from the 1986 and 1987 seasons.
+
+Linear modeling - Cars: 
+
+This script uses the "mtcars" data set to illustrate the creation of a linear regression model.  We also analyze the primary assumptions of linear modeling.
 
 Logistic Regression: 
 
-In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.  Cubic splines are considered but ultimately not included after cross-validation determines they are not helpful to the model.
+In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.
 
 Principal Component Analysis:
 
 In this script, I use the built-in "mtcars" data set to demonstrate principal component analysis as an exploratory analysis technique.
+
+Random Forest modeling:
+This script contains two random forest models.  One applies to the "mtcars" data set so as to draw a parallel to the linear modeling script.  The other explores the more complex "abalone" data set held in R.
 
 Statistical Analysis - Cancer Statistics: 
 
 In this script, I use data from the Cleveland Clinic that is directly referenced in the script, no alterations are necessary.  The analysis focuses on the odds ratios associated with Thyroid cancer for men vs. women, and contains analysis across both time and gender.
 
 SQLite Demo:
+
 This script uses the RSQLite package which embeds an SQLite database engine in R.  I add the tables from the "SQL Practice Problems" book by Sylvia Mosilik.  I then use SQLite to execute the queries that are mey answers to some of the "Intermediate" and "Challenge" problems.  The original code was written in MS SQL, and what you see in this repository is my adaptation to SQLite.  For your reference, please find attached a photo of the database schema.
 
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
