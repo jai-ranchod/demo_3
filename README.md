@@ -11,6 +11,16 @@ Both are free.
 
 The data sets referenced are all built into R.
 
+You can download the python scripting language here:
+https://www.python.org/downloads/
+
+and you can download the PyCharm IDE here:
+https://www.jetbrains.com/pycharm/download/#section=mac
+
+Finally, you can download Microsoft SQL Server here:
+https://docs.microsoft.com/en-us/sql/ssms/sql-server-management-studio-ssms?view=sql-server-ver15
+
+
 Birthday Paradox(python):
 This files explores the "Birthday Paradox" which states that the probability of having two or more people in the same room with the same birthday exceeds 50% with only 23 people in the room.
 
