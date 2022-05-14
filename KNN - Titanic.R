@@ -1,5 +1,5 @@
 #####KNN#####
-#We also notice that the ratio of predictors p to observations n is quite high indicating a k-nearest neighbors 
+#Wehn observing the Titanic data set, we notice that the ratio of predictors p to observations n is quite high indicating a k-nearest neighbors 
 #model may work well.  The p/n ratio is important for this model; in k-nearest neighbors we need to have
 #confidence that there will be a sufficient density of observations in p-dimensional space.  Otherwise we
 #compare our test data to observations that are not actually very similar.
@@ -37,7 +37,30 @@ titanic <-  titanic_train %>%
 #We keep the rows that we have reason to believe may inform the survival status of the passenger.  This means excluding
 #cabin, port of embarkment, ticket number, and name.  Cabin and port of embarkment could feasibly carry some information about 
 #the socio-economic standing of the passenger, but certainly not more than is held in the fare or class predictors.
-#We'll remove NA rows as there aren't very many
+sum(is.na(titanic$Survived))
+sum(is.na(titanic$Pclass))
+sum(is.na(titanic$Sex))
+sum(is.na(titanic$Age))
+sum(is.na(titanic$SibSp))
+sum(is.na(titanic$Parch))
+sum(is.na(titanic$Fare))
+
+#Examination of the data reveals that we have NA values, and that all of our NA fields are in the age column.
+
+
+#In this particular case, it makes sense to focus on the data where we have complete observations, as explained by this
+#excerpt from mastersindatascience.org:
+
+#"The imputation method develops reasonable guesses for missing data. It’s most useful when the percentage of missing data is low.
+#If the portion of missing data is too high, the results lack natural variation that could result in an effective model.
+#The other option is to remove data. When dealing with data that is missing at random, related data can be deleted to reduce bias.
+#Removing data may not be the best option if there are not enough observations to result in a reliable analysis."
+
+#https://www.mastersindatascience.org/learning/how-to-deal-with-missing-data/
+
+#We still have plenty of data with which to perform useful analysis.  We have NA values in about 20% of the data set, 
+#which is far greater than the 5% recommended threshold for imputation.
+
 titanic <- na.omit(titanic)
 #making the sex column binary with male = 1
 titanic$sex_binary <- as.integer(titanic$Sex == "male")
@@ -72,109 +95,6 @@ hist(titanic$Fare, main = "Histogram of Fare", xlab = "Fare", ylab = "Count of P
 #Now let's look at the Age predictor
 hist(titanic$Age, main = "Histogram of Age", xlab = "Age", ylab = "Count of Passengers")
 #This distribution is much easier to handle.  
-
-#However, given the outliers in the "Fare" attribute, we should
-#try out the "robust scaler" normalization method.
-#####Robust Normalization#####
-
-#We use the following formula:
-# x_new = x-median/(75_quartile-25_quartile)
-#This transformation method is robust against outliers, and thus will be helpful given the "Fare" attribute
-
-Age_q25 <- summary(titanic$Age)[[2]]
-Age_q50 <- summary(titanic$Age)[[3]]
-Age_q75 <- summary(titanic$Age)[[5]]
-
-titanic$AgeNorm <- (titanic$Age - Age_q50)/(Age_q75-Age_q25)
-range(titanic$Age)
-range(titanic$AgeNorm)
-#Here we see that we have significantly reduced the range of the "age" attribute, making it much more conducive
-#to KNN.  However, note that we still have a range of ~4.5 in the normalized column.  That means we are still
-#exposing ourselves to potentially applying much more weight to the "Age" attribute than to a binary predictor
-#like "sex".  To correct that problem, i.e. make sure all attributes are on the same scale, we would do a
-#max/min normalization.  We can try both techniques separately, then try both at the same time, and see how it goes.
-#We'll complete modeling with the robust scaling mechanism first.
-Fare_q25 <- summary(titanic$Fare)[[2]]
-Fare_q50 <- summary(titanic$Fare)[[3]]
-Fare_q75 <- summary(titanic$Fare)[[5]]
-
-titanic$FareNorm <- (titanic$Fare - Fare_q50)/(Fare_q75 - Fare_q25)
-range(titanic$Fare)
-range(titanic$FareNorm)
-
-#We see a similar phenomena here.  We've substantially reduced the range of the predictor, but we are still leaving ourselves exposed to 
-#applying more weight to some predictors than others in a way that we don't want to.  Let's continue for now, we can return to this issue later.
-
-Pclass_q25 <- summary(titanic$Pclass)[[2]]
-Pclass_q50 <- summary(titanic$Pclass)[[3]]
-Pclass_q75 <- summary(titanic$Pclass)[[5]]
-
-titanic$ClassNorm <- (titanic$Pclass - Pclass_q50)/(Pclass_q75 - Pclass_q25)
-
-Sib_q25 <- summary(titanic$SibSp)[[2]]
-Sib_q50 <- summary(titanic$SibSp)[[3]]
-Sib_q75 <- summary(titanic$SibSp)[[5]]
-
-titanic$SibNorm <- (titanic$SibSp - Sib_q50)/(Sib_q75 - Sib_q25)
-
-ParentChild_q25 <- summary(titanic$Parch)[[2]]
-ParentChild_q50 <- summary(titanic$Parch)[[3]]
-ParentChild_q75 <- summary(titanic$Parch)[[5]]
-
-titanic$ParentChildNorm <- (titanic$Parch - ParentChild_q50)/(ParentChild_q75 - ParentChild_q25)
-
-Sex_q25 <- summary(titanic$sex_binary)[[2]]
-Sex_q50 <- summary(titanic$sex_binary)[[3]]
-Sex_q75 <- summary(titanic$sex_binary)[[5]]
-
-titanic$SexNorm <- (titanic$sex_binary - Sex_q50)/(Sex_q75 - Sex_q25)
-
-titanicNorm <- titanic %>% select(Survived, ClassNorm, sex_binary, AgeNorm, SibNorm, ParentChildNorm, FareNorm)
-for(i in 1:nrow(titanicNorm))
-{
-  if(titanicNorm$Survived[i] == 1)
-  {
-    titanicNorm$Survived[i] <- "Survived"
-  }
-  if(titanicNorm$Survived[i] == 0)
-  {
-    titanicNorm$Survived[i] <- "Died"
-  }
-}
-titanicNorm$Survived <- factor(titanicNorm$Survived)
-#Now that we have a normalized data set, we can split our data into a training set and a hold out test set.
-#We will use the training set for cross-validation to determine the optimal parameter k, then see how we do on
-#the held out test set.
-
-set.seed(1)
-vec <- sample(c(1:nrow(titanicNorm)), (nrow(titanicNorm)/5),replace = FALSE)
-testNorm <- titanicNorm[vec,]
-trainNorm <- titanicNorm[-vec,]
-set.seed(2)
-control <- trainControl(method = "cv", number = 10, p = .9, classProbs = TRUE)
-train_knn <- train(Survived ~ ., method = "knn",
-                   data = trainNorm,
-                   tuneGrid = data.frame(k = seq(1, 71, 2)),
-                   trControl = control,
-                   metric = "Kappa") 
-
-ggplot(train_knn, highlight = TRUE)+
-  xlab("k (Neighbors)")+
-  ylab("Accuracy")+
-  ggtitle("Accuracy via cross-training")
-
-train_knn$bestTune
-#Here we see that the optimal number of neighbors k is 33 based on 10-fold cross validation.
-#Now we can see how our model does on the hold out test set.
-
-knn_robustnorm_fit <- knn3(Survived ~ ., data = trainNorm, k = train_knn$bestTune$k)
-y_hat_knn <- predict(knn_robustnorm_fit, newdata = testNorm, type = "class")
-y_hat_knn
-
-RobustAccuracy <- confusionMatrix(y_hat_knn, testNorm$Survived)$overall[["Accuracy"]]
-RobustKappa <- confusionMatrix(y_hat_knn, testNorm$Survived)$overall[["Kappa"]]
-RobustAccuracy
-RobustKappa
 
 #####Max/Min Normalization#####
 #Now we create a model using a max/min normalization method that will scale each predictor down to some value between 0 and 1
