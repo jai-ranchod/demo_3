@@ -1,4 +1,9 @@
-
+--Overview--
+/*
+This file shows selected problems from my Advanced Topcis SQL Server class.  It is based on the "Adventureworks 2019" dataset
+that can be found here:
+https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver15&tabs=ssms
+*/
 --Window Functions --
 
 /*
