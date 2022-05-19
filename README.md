@@ -36,6 +36,11 @@ This script uses the "titanic_train" data set to illustrate the use of the k-nea
 LASSO Regression (R):
 Here we use the LASSO regularization technique as applied to a linear model predicting the salaries of baseball players using statistics from the 1986 and 1987 seasons.
 
+LASS Regression (python):
+This is a script showing the necessity and utility of the L1 regularization technique (LASSO) on the "Hitters" dataset found here:
+
+https://www.kaggle.com/datasets/floser/hitters
+
 Recursive Query - Employee Lineage (SQL):
 Here we create a table of employees and managers.  We then use a recursive query to create a table identifying the top level managers and the number of employees under each.
 
@@ -56,6 +61,11 @@ In this script, I use data from the Cleveland Clinic that is directly referenced
 
 SQLite Demo(SQL in R):
 This script uses the RSQLite package which embeds an SQLite database engine in R.  I add the tables from the "SQL Practice Problems" book by Sylvia Mosilik.  I then use SQLite to execute the queries that are mey answers to some of the "Intermediate" and "Challenge" problems.  The original code was written in MS SQL, and what you see in this repository is my adaptation to SQLite.  For your reference, please find attached a photo of the database schema.
+
+Master Class Exercises(SQL):
+This script contains selected problems from an advanced topics SQL Server class I took.  The problems focus on the "Adventure Works 2019" dataset that can be found here:
+
+https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver15&tabs=ssms
 
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
 
