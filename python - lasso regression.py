@@ -9,6 +9,10 @@ import random
 from random import sample
 from sklearn import linear_model
 
+# Note that for the purposes of this exercise we are going to assume that this dataset is conducive to a linear model.
+# The objective here is to demonstrate the linear model regularization process specifically.
+
+
 # Importing and trimming data set
 df = pd.read_csv('./Hitters.csv')
 # The 'Hitters' dataset can be found on kaggle here:
