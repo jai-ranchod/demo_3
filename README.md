@@ -70,6 +70,9 @@ https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?vi
 Dietary Linear Program(python):
 This is a simple linear program designed to optimize ones food budget subject to the constraint that the food purchased must contain sufficient amounts of eight selected vitamins and nutrients.  Prices (as of 2022) and nutritional content are all researched and links are commented in the code.
 
+Hangman(python):
+This is a simple hangman game generated in python.
+
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
 
 jsranchod@gmail.com
