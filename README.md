@@ -33,9 +33,6 @@ This script uses a data set from Yahoo Finance that will be referenced directly 
 KNN - Titanic (R):
 This script uses the "titanic_train" data set to illustrate the use of the k-nearest neighbors algorithm to create a binary classifier on the survival status of passengers from the infamous Titanic Oceanliner tragedy.
 
-LASSO Regression (R):
-Here we use the LASSO regularization technique as applied to a linear model predicting the salaries of baseball players using statistics from the 1986 and 1987 seasons.
-
 LASS Regression (python):
 This is a script showing the necessity and utility of the L1 regularization technique (LASSO) on the "Hitters" dataset found here:
 
@@ -45,7 +42,7 @@ Recursive Query - Employee Lineage (SQL):
 Here we create a table of employees and managers.  We then use a recursive query to create a table identifying the top level managers and the number of employees under each.
 
 Linear modeling - Cars(R): 
-This script uses the "mtcars" data set to illustrate the creation of a linear regression model.  We also analyze the primary assumptions of linear modeling.
+This script uses the "mtcars" data set to illustrate the creation of a linear regression model. The primary purpose of this script, however, is to evaluate the assumptions of linear models against a fitted linear model.
 
 Logistic Regression(R):
 In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.
@@ -53,8 +50,11 @@ In this script, we return to the "Titanic" data set to build a logistic regressi
 Principal Component Analysis(R):
 In this script, I use the built-in "mtcars" data set to demonstrate principal component analysis as an exploratory analysis technique.
 
-Random Forest modeling(R):
-This script contains two random forest models.  One applies to the "mtcars" data set so as to draw a parallel to the linear modeling script.  The other explores the more complex "abalone" data set held in R.
+Random Forest modeling - mtcars data(R):
+This script applies a random forest method to the mtcars dataset to estiamte fuel efficiency given the other data.
+
+Random Forest modeling - abalone data(R): 
+This script applies a random forest method to the mtcars dataset to estimate abalone age given the other data.
 
 Statistical Analysis - Cancer Statistics(R): 
 In this script, I use data from the Cleveland Clinic that is directly referenced in the script, no alterations are necessary.  The analysis focuses on the odds ratios associated with Thyroid cancer for men vs. women, and contains analysis across both time and gender.
