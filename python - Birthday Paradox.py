@@ -3,14 +3,14 @@ import pandas as pd
 import random as rd
 import matplotlib.pyplot as plt
 
-#Here we analyze the "birthday paradox" which states that if you have 23 people in a remove, there
+#Here we analyze the "birthday paradox" which states that if you have 23 people in a room, there
 #is a ~50% chance that at least two of them have the same birthday. This seems highly counterintuitive
 #but it works out in the following way:
-    #for one person, the probability of having a unique birthday is simply 1
-    #with two people, the probability of unique birthdays is 1*(364/365) since you need the second person
+    #For one person, the probability of having a unique birthday is simply 1.
+    #With two people, the probability of unique birthdays is 1*(364/365) since you need the second person
     #to have a different birthday, and there is a 364/365 probability of this. Now with a third person, the same
-    #logic follows and the probability of unique birthdays becomes 1*(364/365)*(363/365) and so on
-    #then we simply say that the probability of at least two people having the same birthday is 
+    #logic follows and the probability of unique birthdays becomes 1*(364/365)*(363/365) and so on.
+    #Then we simply say that the probability of at least two people having the same birthday is 
     #1 minus the probability of unique birthdays.
 #We can illustrate with this simple for loop.  
 #For all of this analysis, please recall that python indexes from 0, not 1.  Therefore, we set up
