@@ -41,36 +41,36 @@ https://www.kaggle.com/datasets/floser/hitters
 Recursive Query - Employee Lineage (SQL):
 Here we create a table of employees and managers.  We then use a recursive query to create a table identifying the top level managers and the number of employees under each.
 
-Linear modeling - Cars(R): 
+Assumptions of Linear modeling (R): 
 This script uses the "mtcars" data set to illustrate the creation of a linear regression model. The primary purpose of this script, however, is to evaluate the assumptions of linear models against a fitted linear model.
 
-Logistic Regression(R):
+Logistic Regression (R):
 In this script, we return to the "Titanic" data set to build a logistic regression model.  The "titanic_train" set is used to create the binary predictor model which is then evaluated on the "titanic_test" set.
 
-Principal Component Analysis(R):
+Principal Component Analysis (R):
 In this script, I use the built-in "mtcars" data set to demonstrate principal component analysis as an exploratory analysis technique.
 
-Random Forest modeling - mtcars data(R):
+Random Forest modeling - mtcars data (R):
 This script applies a random forest method to the mtcars dataset to estiamte fuel efficiency given the other data.
 
-Random Forest modeling - abalone data(R): 
+Random Forest modeling - abalone data (R): 
 This script applies a random forest method to the mtcars dataset to estimate abalone age given the other data.
 
-Statistical Analysis - Cancer Statistics(R): 
+Statistical Analysis - Cancer Statistics (R): 
 In this script, I use data from the Cleveland Clinic that is directly referenced in the script, no alterations are necessary.  The analysis focuses on the odds ratios associated with Thyroid cancer for men vs. women, and contains analysis across both time and gender.
 
-SQLite Demo(SQL in R):
+SQLite Demo (SQL in R):
 This script uses the RSQLite package which embeds an SQLite database engine in R.  I add the tables from the "SQL Practice Problems" book by Sylvia Mosilik.  I then use SQLite to execute the queries that are mey answers to some of the "Intermediate" and "Challenge" problems.  The original code was written in MS SQL, and what you see in this repository is my adaptation to SQLite.  For your reference, please find attached a photo of the database schema.
 
-Master Class Exercises(SQL):
+Master Class Exercises (SQL):
 This script contains selected problems from an advanced topics SQL Server class I took.  The problems focus on the "Adventure Works 2019" dataset that can be found here:
 
 https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver15&tabs=ssms
 
-Dietary Linear Program(python):
+Dietary Linear Program (python):
 This is a simple linear program designed to optimize ones food budget subject to the constraint that the food purchased must contain sufficient amounts of eight selected vitamins and nutrients.  Prices (as of 2022) and nutritional content are all researched and links are commented in the code.
 
-Hangman(python):
+Hangman (python):
 This is a simple hangman game generated in python.
 
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
