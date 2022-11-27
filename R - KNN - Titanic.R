@@ -4,6 +4,16 @@
 #confidence that there will be a sufficient density of observations in p-dimensional space.  Otherwise we
 #compare our test data to observations that are not actually very similar.
 
+#Another consideration to be mindful of in the application of k-nearest neighbors is the presence of outliers either in our initial dataset or in any "new"
+#data for which we may want to apply a prediction.  If we have outliers in our initial dataset that will impact the normalization process.  However, as we
+#will see later, there are ways to handle this.  If we think we may encounter a new data point for which we want to make a prediction that has values far
+#outside the bounds of the data we used to build the model this can also be an issue.  We take the existing data and arrange it in a p-dimensional 
+#predictor space.  We then take new points and assign them classes based on their distance to the existing points in this p-dimensional space.  However,
+#if a new point requires a prediction and is far outside the bounds of the pre-existing data that would impact how we view the prediction made by our model.
+#Thankfully in our case, outliers are not posisble in the categorical predictors like class, sex, and arguably even fare (if it was standardized).
+#Number of parents/children, siblings/spouses, and age will vary, but the effects of these predictors on the outcome should not vary much at the extreme
+#highs from what we already observe, and all have set floors.  Not to mention extreme outliers in these dimensions would be quite rare given their ranges in
+#our data.
 
 #####Loading Libraries and Introducing Data#####
 #Here we are interested in solving a classification problem to predict who will survive and who will not survive the infamous titanic wreck
