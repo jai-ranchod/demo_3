@@ -59,16 +59,59 @@ corrplot(Matrix)
 #VIF_i = 1/(1-(R_i)^2)
 #where (R_i)^2 is the coefficient of determination of the regression of all other predictors onto the ith predictor.
 vfModel <- lm(mpg ~.,data = mtcars)
-vif(vfModel)
 
-#Given the definition of VIF and the procedure of the stepVIF function, we can expect consistent results.
-summary(stepVIF(vfModel))
-plot(vif(vfModel), xlab = "Index of Predictors", ylab = "VIF", main = "VIF of Predictors")
-abline(h=10, col = "red")
-abline(h=5, col = "red")
-#The default threshold for eliminating predictors from a model based on VIF in the stepVIF() function in R is 10.  
-#We see that our universal model has 2 predictors removed when we employ the stepVIF function; "cyl" and "disp".
-#As such we will remove them from our model.
+vif(vfModel)
+#The conventional VIF threshold, above which a feature may need to be removed from the model, is 10:
+#https://quantifyinghealth.com/vif-threshold/#:~:text=Most%20research%20papers%20consider%20a,of%205%20or%20even%202.5.
+
+#Here we note that "cyl", "disp", and "wt" are above this threshold.
+#We can also use the stepVIF() function on bootstrapped data. This function removes features from a model on the basis
+#of VIF score in a step-wise fashion.  
+
+k <- 100
+v <- c()
+for(i in 1:k)
+{
+  set.seed(seed = i) 
+  vifdf <- data.frame()
+  for(j in 1:nrow(mtcars))
+  {
+    n <- sample(1:nrow(mtcars),size = 1,replace = TRUE)
+    vifdf <- rbind(vifdf, mtcars[n,])
+  }
+  vfModel <- lm(mpg ~.,data = vifdf)
+  vfModel <- stepVIF(vfModel)
+  
+  vfterms <- attr(vfModel$terms, "term.labels")
+  v <- c(v,vfterms)
+  print(i)
+}
+
+
+hp <- sum(v == "hp")/k
+drat <- sum(v == "drat")/k
+wt <- sum(v == "wt")/k
+qsec <- sum(v == "qsec")/k
+vs <- sum(v == "vs")/k
+am <- sum(v == "am")/k
+gear <- sum(v == "gear")/k
+carb <- sum(v == "carb")/k
+cyl <- sum(v == "cyl")/k
+disp <- sum(v == "disp")/k
+
+
+hp
+drat
+wt
+qsec
+vs
+am
+gear
+carb
+cyl
+disp
+#Here we see that "cyl" and "disp" appear in very few models, and "qsec" also appears in fewer than half of the models.
+#Given that both methods indicate that "cyl" and "disp" should be removed we can take them out of our model and move on.
 
 #Having gained some insight into our data set, lets proceed to training our model.
 
@@ -80,7 +123,7 @@ df$vs <- factor(df$vs)
 
 #Next, we need to plot our data set into a training set and a test set.  We train the model on the training set, then
 #evaluate our performance against the test set.
-set.seed(1)
+set.seed(2)
 y <- df$mpg
 testIndex <- createDataPartition(y, times = 1, p = 0.2, list = FALSE)
 
@@ -91,7 +134,7 @@ v <- c()
 for(i in 1:k)
   
 {
-  set.seed(seed = i+1) #we used seed equals one above
+  set.seed(seed = i+2) #we used seed equals one, two above
   traindf <- data.frame()
   for(j in 1:nrow(train))
   {
@@ -101,6 +144,7 @@ for(i in 1:k)
     traindf <- rbind(traindf, train[n,])
   }
   
+  #Notice we do not include "cyl" and "disp" as both collinearity analysis approaches implied their removal.
   carsModel <- lm(mpg ~ hp + drat + qsec + vs + am + gear + carb + wt,data = traindf)
   carsModel <- step(carsModel, trace = 0)
   
