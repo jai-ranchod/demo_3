@@ -266,7 +266,7 @@ par(mfrow = c(1,1))
 #We see a distrotion in the upper right hand side of the plot, but it does not appear to be anything severe.
 
 
-#Additional Consideration2
+#Additional Considerations
 #1: Outliers
 #Although it is not always considered one of the core assumptions of linear modeling, one should
 #be on the lookout for influential outliers that can cause issues with the model.  To investigate
