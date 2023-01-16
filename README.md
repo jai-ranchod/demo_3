@@ -41,10 +41,10 @@ https://www.kaggle.com/datasets/floser/hitters
 Recursive Query - Employee Lineage (SQL):
 Here we create a table of employees and managers.  We then use a recursive query to create a table identifying the top level managers and the number of employees under each.
 
-Assumptions of Linear modeling (R): 
+Assumptions of Linear Modeling - Hitters Data (R): 
 This script uses the "Hitters" data set to illustrate the creation of a linear regression model. The primary purpose of this script, however, is to evaluate the assumptions of linear models against a fitted linear model.
 
-R - Assumptions of Linear Modeling - Outcome Transformation
+Assumptions of Linear Modeling - Outcome Transformation (R):
 This is an extension of the initial assumptions of linear modeling file in which we apply a log transformation to the outcome.
 
 Logistic Regression (R):
@@ -73,6 +73,8 @@ https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?vi
 Dietary Linear Program (python):
 This is a simple linear program designed to optimize ones food budget subject to the constraint that the food purchased must contain sufficient amounts of eight selected vitamins and nutrients.  Prices (as of 2022) and nutritional content are all researched and links are commented in the code.
 
+
+As you can see, my specializations are in R and SQL, although I have proficiency in python as well.
 I look forward to sharing my work with you. There is a lot of information here, so if you would like a pdf with more detailed explanations, or if you have any other questions or comments, please do not hesitate to reach out to me at:
 
 jsranchod@gmail.com
