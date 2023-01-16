@@ -1,7 +1,8 @@
 # In this file, we take the 'Hitters' dataset and construct a regularized linear model predicting
 # player salary. We do this with lasso regression (l1 regularization) which penalizes the objective
 # function with the absolute value of the sum of the model coefficients.  Please note that we are
-# assuming that this dataset is conducive to a linear model in this case.  The purpose here is to
+# assuming that this dataset is conducive to a linear model in this case.  Plesae also note that this is not the 
+# same data set that is embedded in R.  The purpose here is to
 # illustrate the creation of a regularized linear model.  Evaluating the diagnostics and assumptions
 # of linear modeling is explored elsewhere in this repository.
 
