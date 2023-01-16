@@ -229,3 +229,5 @@ par(mfrow = c(1,1))
 
 #Alternatively, if we really wanted to stick with the linear model, we could perform a transformation of some
 #kind on the outcome and try again.  A natural log transformation is a popular choice in this kind of situation.
+#We continue the analysis with such a transformation here:
+#https://github.com/jai-ranchod/demo_3/blob/main/R%20-%20Assumptions%20of%20Linear%20Modeling%20-%20Outcome%20Transformation.R
