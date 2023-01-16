@@ -118,7 +118,7 @@ xFrame$LeagueN <- xFrame$LeagueN*leaguen
 xFrame$DivisionW <- xFrame$DivisionW*divisionw
 xFrame$PutOuts <- xFrame$PutOuts*putouts
 df <- as.data.frame(cbind(Hitters$Salary, xFrame$Hits, xFrame$Walks, xFrame$CRuns, xFrame$CRBI, xFrame$LeagueN, xFrame$DivisionW, xFrame$PutOuts))
-colnames(df) <- c("Salary",                "Hits",      "Walks",     "c_Runs",     "c_RBI",    "NationalLeague", "DivisionWest", " Putouts")
+colnames(df) <- c("Salary",                "Hits",      "Walks",     "c_Runs",     "c_RBI",    "NationalLeague", "DivisionWest", "Putouts")
 
 t <- lm(Salary ~ . , data = df)
 vif(t)
@@ -195,6 +195,7 @@ dftest <- df2[dftestindex,]
 
 t_df <- lm(Salary~., data = dftrain)
 vif(t_df)
+#Notice here that we have quite low VIF scores
 lmPredictions <- predict(t_df, newdata = dftest, type = "response")
 
 test <- as.data.frame(bind_cols(dftest, lmPredictions))
@@ -228,8 +229,3 @@ par(mfrow = c(1,1))
 
 #Alternatively, if we really wanted to stick with the linear model, we could perform a transformation of some
 #kind on the outcome and try again.  A natural log transformation is a popular choice in this kind of situation.
-
-
-
-
-
