@@ -78,6 +78,7 @@ alphas = np.linspace(0.01, 500, 100)
 lasso = Lasso(max_iter=10000)
 coefs = []
 
+# Note that the regularization parameter for the lasso model in python is alpha
 for a in alphas:
     lasso.set_params(alpha=a)
     lasso.fit(x_train, y_train)
