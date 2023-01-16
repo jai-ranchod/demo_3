@@ -68,7 +68,7 @@ cv.output$lambda.min
 
 
 final <- glmnet(x,y,alpha = 1, lambda = cv.output$lambda.min)
-lasso.coef <- predict(final, type = "coefficients", s = cv.output$lambda.min)[1:20,]
+lasso.coef <- predict(final, type = "coefficients")[1:20,]
 lasso.coef
 
 ####Plotting Regularization####
