@@ -216,6 +216,11 @@ ggplot(tmp[tmp$coef %in% c("CRuns", "CRBI"),], aes(lambda, value, color = coef, 
 #Indeed we see that we should have both as per the lasso process, but a final model would certainly
 #exclude career runs based on the above analysis.  The lasso technique is useful, but results should 
 #always be interpreted and critically analyzed before being deployed.
+t2 <- lm(Salary ~ Hits + Walks + c_RBI + NationalLeague + DivisionWest + Putouts, data = df)
+par(mfrow = c(2,2))
+plot(t2, labels.id = FALSE)
+par(mfrow = c(1,1))
+#Simply noting that removing career runs does not solve our linear model assumptions issues.
 
 #It looks like we may have some issues with a few of our linear modeling assumptions here.
 #One potential route would be to simply not use a linear model to predict salary.  There are other, less parameterized
