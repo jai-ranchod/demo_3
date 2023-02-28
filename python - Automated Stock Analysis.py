@@ -1,3 +1,8 @@
+# This file pulls stock data from Yahoo Finance and outputs a file holding data related to the top
+# x% of stock performers from the chosen exchange over the chosen time period based on return compared
+# against index.  All parameters can be set in the "parameters" section of the code below.
+# Also note that individual csv files for each stock will be generated in your directory for performance reasons.
+
 # Imports
 import numpy as np
 from pandas_datareader import data as pdr
