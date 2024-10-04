@@ -1,4 +1,5 @@
 #####Introduction#####
+
 #Here we re-create the previous lasso regresion model found here:
 #https://github.com/jai-ranchod/demo_3/blob/main/R%20-%20Assumptions%20of%20Linear%20Modeling%20-%20Hitters%20Data.R
 #but with a log-transformed outcome.  We'll skip over some of the previous analysis if necessary.
@@ -10,6 +11,7 @@ library(ISLR)
 library(glmnet)
 
 #####Creating Training Set#####
+
 data(Hitters)
 mean(is.na(Hitters))
 #With less than 1% of our data listed as NA, we can remove the NA rows with the na.omit() function
@@ -30,6 +32,7 @@ y.train <- y[train]
 x.train <- x[train,]
 
 #####Fitting Model#####
+
 grid <- 10^seq(10,-2,length=10000)
 set.seed(2)
 cv.output <- cv.glmnet(x.train, y.train, lambda = grid) #alpha = 1 is default value
@@ -44,6 +47,7 @@ lasso.coef <- predict(final, type = "coefficients")[1:20,]
 lasso.coef
 
 ####Plotting Regularization####
+
 #Here we make a plot to observe the effect of regularization on coefficient value
 lasso.mod <- glmnet(x,y,alpha = 1, lambda = grid)
 beta=coef(lasso.mod)
@@ -64,12 +68,12 @@ ggplot(tmp[tmp$coef != "(Intercept)",], aes(lambda, value, color = coef, linetyp
   theme(legend.key.width = unit(3,"lines"))
 
 ####Creating Linear Model####
+
 #L1 and L2 regularization are, after all, just methods of helping us find the best beta (coefficient) vector.
 #As such, let's return to our linear modeling framework.
 s <- as.data.frame(lasso.coef[which(lasso.coef != 0)])
 colnames(s)[1] <- "Coefficient"
 xFrame <- as.data.frame(x) #x - optimized matrix helping with categorical variables from above.
-
 
 intercept <- rep(s["(Intercept)",], length(y))
 hits <- rep(s["Hits",], nrow(x))
@@ -102,11 +106,12 @@ vif(t)
 #This time we do get a VIF score explicitly over 10, so we will outright remove it from the final model
 t <- lm(Salary ~ Hits + HmRun + Walks + Years + CHits + NationalLeague + DivisionWest + Putouts + Errors , data = df)
 
-
 par(mfrow = c(2,2))
 plot(t, labels.id = FALSE)
 par(mfrow = c(1,1))
+
 #####Analyzing Assumptions of Linearity#####
+
 #In general our diagnostic plots look a lot better this time.
 
 #Assumption #1: Linearity: 
