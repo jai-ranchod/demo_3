@@ -32,6 +32,7 @@ View(titanic)
 #Survived_YN - a different expression of survival status
 
 #####Graphics#####
+
 #The first thing that's worth looking at is the breakdown by sex of the population of the ship in general. 
 titanic %>%
   filter(!is.na(Age)) %>%
@@ -65,8 +66,6 @@ titanic %>%
 
 #We also see that probability of survival is related to passenger class, with 1st class being most likely to survive, and 3rd class least likely to survive.
 #We can illustrate this a little more clearly with a pair of position fill bar plots.
-
-
 
 titanic %>%
   ggplot(aes(x = Pclass, fill = Survived)) +
