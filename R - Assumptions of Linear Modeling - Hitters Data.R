@@ -1,9 +1,11 @@
 #####Introduction#####
+
 if (!require("ISLR")) install.packages("ISLR")
 if (!require("glmnet")) install.packages("glmnet")
 
 library(ISLR)
 library(glmnet)
+
 #We'll be using the "Hitters" data set found in the ISLR library to illustrate the Lasso technique for
 #linear model regularization.  Specifically, we'll be modeling salary.  The "Hitters" data set contains baseball
 #statistics for a wide variety of players from the 1986 and 1987 seasons.  The statistics should be self explanatory 
@@ -17,6 +19,7 @@ library(glmnet)
 #zero, which does not happen in ridge regression.
 
 #####Creating Training Set#####
+
 data(Hitters)
 mean(is.na(Hitters))
 #With less than 1% of our data listed as NA, we can remove the NA rows with the na.omit() function
@@ -31,7 +34,6 @@ corrplot(Matrix, method = "color", order = "FPC")
 #We see that we have some multicollinnearity to deal with.  Fortunately, the LASSO technique is well suited to
 #handle this kind of situation.  
 
-
 set.seed(1)
 train <- sample(1:nrow(x), 0.8*nrow(x))
 #notice we are using a 1/5 to 4/5 test to train ratio here
@@ -42,6 +44,7 @@ y.train <- y[train]
 x.train <- x[train,]
 
 #####Fitting Model#####
+
 #Next we use the glmnet() function to fit the lasso model.  Note that when using the glmnet() function, the parameter
 #alpha is the mixing parameter for the penalty function where alpha = 1 implies a lasso (which is the default).
 #Note that we must also define a grid of tuning parameters over which we search of the optimal lambda.
@@ -66,12 +69,12 @@ cv.output$lambda.min
 
 #####Generating coefficients#####
 
-
 final <- glmnet(x,y,alpha = 1, lambda = cv.output$lambda.min)
 lasso.coef <- predict(final, type = "coefficients")[1:20,]
 lasso.coef
 
 ####Plotting Regularization####
+
 #Here we make a plot to observe the effect of regularization on coefficient value
 lasso.mod <- glmnet(x,y,alpha = 1, lambda = grid)
 beta=coef(lasso.mod)
@@ -93,12 +96,12 @@ ggplot(tmp[tmp$coef != "(Intercept)",], aes(lambda, value, color = coef, linetyp
   theme(legend.key.width = unit(3,"lines"))
 
 ####Creating Linear Model####
+
 #L1 and L2 regularization are, after all, just methods of helping us find the best beta (coefficient) vector.
 #As such, let's return to our linear modeling framework.
 s <- as.data.frame(lasso.coef[which(lasso.coef != 0)])
 colnames(s)[1] <- "Coefficient"
 xFrame <- as.data.frame(x) #x - optimized matrix helping with categorical variables from above.
-
 
 intercept <- rep(s["(Intercept)",], length(y))
 hits <- rep(s["Hits",], nrow(x))
@@ -130,6 +133,7 @@ vif(t)
 par(mfrow = c(2,2))
 plot(t, labels.id = FALSE)
 par(mfrow = c(1,1))
+
 #####Analyzing Assumptions of Linearity#####
 
 #Assumption #1: Linearity: 
