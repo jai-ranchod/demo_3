@@ -21,6 +21,7 @@ Finally, you can download Microsoft SQL Server here:
 https://docs.microsoft.com/en-us/sql/ssms/sql-server-management-studio-ssms?view=sql-server-ver15
 
 **SQLite Demo (SQL in R)**:
+
 This script uses the RSQLite package which embeds an SQLite database engine in R.  I add the tables from the "SQL Practice Problems" book by Sylvia Mosilik.  I then use SQLite to execute the queries that are mey answers to some of the "Intermediate" and "Challenge" problems.  The original code was written in MS SQL, and what you see in this repository is my adaptation to SQLite.  For your reference, please find a photo of the database schema below.
 
 **Assumptions of Linear Modeling - Hitters Data (R)**: 
