@@ -54,7 +54,7 @@ head(Cancer_Stats)
 
 #Note that we are only analyzing incidence data here, and since each record in that case represents a new case
 #of (in this case) thyroid cancer, we can consider the observations independent.
-#We start off with a simple density plot showing differences based on sex:
+
 #####Initial Analysis#####
 #First we need to filter our data.  This analysis will consider incidences of thyroid cancer across all
 #races.  We will create splits along gender lines to analyze the effect of thyroid cancer on men and women.
@@ -205,7 +205,9 @@ New_Age_Group_Sex %>% ggplot(aes(x = AGE_GRP, y = odds_ratio_female_to_male))+
 #From this graph we can see that the odds ratios are highest in the younger age groups, with the most precise confidence intervals occurring between ages 55-85.
 #This indicates that at younger age groups women are more prone to thyroid cancer than men, but the disparity evens out as 
 #age increases.
+
 #####Comparing odds ratios over time#####
+
 Male_Thyroid_1999 <- Cancer_Stats %>% filter(EVENT_TYPE == "Incidence", RACE == "All Races", SITE == "Thyroid", SEX == "Male", YEAR == 1999)
 Female_Thyroid_1999 <- Cancer_Stats %>% filter(EVENT_TYPE == "Incidence", RACE == "All Races", SITE == "Thyroid", SEX == "Female", YEAR == 1999)
 Thyroid_1999 <- inner_join(Male_Thyroid_1999, Female_Thyroid_1999, by = "AGE_GRP", suffix = c("_Male", "_Female"))
@@ -249,6 +251,7 @@ df %>% ggplot(aes(x = Age_Group))+
   ylab("Odds Ratio")+
   ggtitle("Odds Ratio of Thyroid \n Cancer (Female to Male) by Year")+
   theme(axis.text.x = element_text(angle = 270, vjust = 0.5, hjust=1))
+
 #Notice that in 1999, the odds ratios are all above 1, indicating the odds of thyroid cancer are higher for women in all age groups, although the odds ratio
 #does appear to approach 1 in the older age groups.  However, in 2011, the odds ratio actually does fall below 1 in all age groups over age 65, indicating
 #the odds of thyroid cancer are higher for males in these age groups in 2011.
